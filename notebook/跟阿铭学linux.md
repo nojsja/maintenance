@@ -160,3 +160,75 @@ du -s
 mkesfs/mkfs.ext2/mkfs.ext3/mkfs.ext4/mkfs.xfs
 
 #### 磁盘的挂载和卸载
+
+1. 查看挂载 mount
+
+2. 挂载 mount /dev/sd* /dir
+
+3. 系统挂载配置文件 /etc/fstab
+
+4. mount -a 自动挂载fstab配置文件里声明的设备
+
+5. 获取分区UUID -- blkid  
+让分区再开机之后自动挂载可以：  
+1) 添加/etc/fstab配置文件  
+2) 将挂载命令添加到/etc/rc.d/rc.local文件中去
+```sh
+# /etc/rc.d/rc.local
+#
+# 可以使用UUID和Label
+/usr/bin/mount UUID="f8fa9bcd-ae3e-40e5-8bd9-7b3872259d03" /dir
+```
+3) 赋予可执行权限 chmod a+x /etc/rc.d/rc.local  
+
+6. umount -l 强制卸载
+
+7. 建立swap分区增加虚拟内存
+>建立swapfile -> 格式化为swap格式 -> 启动虚拟磁盘
+
+```sh
+# 建立swap文件 -- if检测存在 of目标文件 bs块的大小 count块数量
+dd if=/dev/zero of=/tmp/dir bs=1M count=8096
+# 格式化为swap格式
+mkswap -f /tmp/dir
+# 查看内存大小
+free -m
+```
+
+### 文本编辑工具vim
+_________________
+
+#### 一般模式
+>此模式下可以复制、粘贴、删除  
+
+```sh
+# 上下左右
+k j h l
+# 下一页
+ctrl + f
+# 上一页
+ctrl + b
+# 行首 和 行尾
+0 $
+# 第一行
+gg
+# 去第n行
+nG
+# 最后一行
+G
+# 向后和向前删除字符
+x X
+# 向后删除n个字符
+nx
+# 删除/剪切光标所在
+dd
+# 向后删除n行
+ndd
+
+```
+
+
+
+#### 编辑模式
+
+#### 命令模式
