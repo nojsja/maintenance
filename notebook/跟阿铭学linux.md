@@ -66,7 +66,7 @@ chmod -R 700 target # 数字更改权限
 chmod -R u=rwx,og=rx target  # 字母更改权限
 chmod -R u-x target # 字母减少权限
 chmod -R a+x target # 字母所有增加权限
-```
+```####
 
 5. 更改文件的默认权限umask
 ```sh
@@ -173,7 +173,7 @@ mkesfs/mkfs.ext2/mkfs.ext3/mkfs.ext4/mkfs.xfs
 让分区再开机之后自动挂载可以：  
 1) 添加/etc/fstab配置文件  
 2) 将挂载命令添加到/etc/rc.d/rc.local文件中去
-```sh
+```sh####
 # /etc/rc.d/rc.local
 #
 # 可以使用UUID和Label
@@ -227,8 +227,154 @@ ndd
 
 ```
 
-
-
 #### 编辑模式
+```sh
+# # 由一般模式进入编辑模式
+#
+# 在当前字符插入
+i
+# 在鼠标所在的行首插入
+I
+# 在当前字符后插入
+a
+# 在鼠标所在的行尾插入
+A
+# 在当前行的下一行插入新的一行
+o
+# 载当前行的上一行插入一行
+O
+```
 
 #### 命令模式
+```sh
+# 在光标之后查找一个字符，按n向后继续搜索
+/word
+# 在光标之前查找一个字符，按n继续向前查找
+?word
+# 在n1和n2行之间查找所有的word1并替换为wor2，不加g则只替换第一个
+:n1,n2s/word1/word2/g
+# 将所有word1替换为word2，不加g则只替换每一行的第一个word1
+:1,$s/word1/word2/g
+# 显示行号
+:set nu
+# 不显示行号
+:set nonu
+```
+
+### 安装RPM包或源码包
+_________________
+
+#### RPM工具
+```sh
+# # 安装RPM包
+# i -- 表示安装
+# v -- 可视化
+# h -- 显示安装进度
+rpm -ivh *.rpm
+# # 升级RPM包
+rpm -Uvh pkg
+# # 卸载RPM包
+rpm -e pkg
+# # 查询一个包是否安装
+rpm -q pkg
+# # 查询所有安装的包
+rpm -qa
+# # 得到一个包的相关信息
+rpm -qi pkg
+# # 列出一个包的安装文件
+rpm -ql pkg
+# # 列出某个文件属于哪个RPM包
+rpm -qf filename
+```
+
+#### yum工具
+```sh
+# # 列出所有yum资源
+yum list
+# # 搜索rpm包
+yum search pkg
+# # 安装yum包
+yum install -y pkg
+# # 卸载包
+yum remove pkg
+# # 升级包
+yum update -y pkg
+# # 利用yum工具下载RPM包
+yum install pkg -y --downloadonly --downloaddir=/tmp/
+# # 在包已经安装的情况下下载RPM包
+yum reinstall pkg -y --downloadonly --downlaoddir=/tmp/
+
+```
+
+#### 安装源码包
+```sh
+# # 安装步骤
+# 配置功能，检测编译所需的库是否完整，最后生成MakeFile文件
+./configure
+./configure --help
+# 根据MakeFile进行编译
+make
+# 创建相关软件的存放目录和配置文件安装软件
+make install
+```
+
+### Shell
+_________
+
+#### Shell基础
+
+```sh
+# 输出环境变量
+env
+set
+# 设置临时变量
+var=*
+# 提升变量到子shell
+export var=*
+# 让所有用户永久都能访问变量
+echo "export var=*" >> /etc/profile
+source /etc/profile
+# 仅允许当前用户使用该变量
+echo "export var=*" >> ~/.bashrc
+source ~/.bashrc
+# 变量中使用其它命令
+myname=`pwd`
+# 变量内容累加其它内容
+myname="johnson"Young
+```
+
+#### 系统环境变量和个人环境变量的配置文件
+
+1. /etc/profile
+>这个文件预设了几个重要的变量，例如PATH、USER、LOGNAME、MAIL、INPUTRC、HOSTNAME、HISTSIZE、umask等。  
+
+2. /etc/bashrc
+>这个文件主要预设umask和ps1。  
+
+3. ~/.bash_profile
+>该文件定义了用户的个人化路径和环境变量的文件名称，每个用户都可使用这个文件输入专属于自己的shell信息，用户登录时，该文件仅仅执行一次。  
+
+4. ~/.bashrc
+>该文件包含专属于自己的shell的bash信息，当每次登录或打开新的shell时，该文件会被读取。例如，你可以将用户自定义的别名或自定义变量写到这个文件中。
+
+5. ~/.bash_history
+>该文件记录历史命令。  
+
+6. ~/.bash_logout
+>当退出shell时会执行该文件，文件中可以放一些清理的工作。  
+
+### 正则表达式
+____________
+
+#### grep工具的使用
+```sh
+
+```
+
+#### sed工具的使用
+```sh
+```
+
+#### awk工具的使用
+```sh
+```
