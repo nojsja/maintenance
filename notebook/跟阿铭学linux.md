@@ -368,13 +368,109 @@ ____________
 
 #### grep工具的使用
 ```sh
+# # grep -[ cinvABC] 'word' filename
+#
+# 表示打印符合要求的行数
+-c
+# 忽略大小写
+-i
+# 输出符合要求的行以及行号
+-n
+# 打印不符合要求的行
+-v
+# 跟一个数字，例如A2表示打印符合要求的行及下面两行
+-A2
+# 跟一个数字，例如A2表示打印符合要求的行及下面两行
+-B2
+# 跟一个数字，例如C2表示打印符合要求的行和其上下两行
+-C2
 
+# # 实例
+#
+# 过滤带有某个关键字的行并输出行号
+grep -n 'root' /etc/passwd
+# 过滤出不带某个关键字的行并输出行号
+grep -nv 'root' /etc/passwd
+# 过滤出所有包含数字的行
+grep '[0-9]' /etc/inittab
+# 过滤出所有不包含数字的行
+grep -v '[0-9]' /etc/inittab
+# 过滤掉所有以#开头的行
+grep -v '^#' /etc/inittab
+# 过滤掉所有空行和以#开头的行
+grep -v '^#' /etc/inittab | grep -v '^$'
+# 过滤出任意一个字符、零个或多字任意字符
+grep 'r.o' /etc/passwd
+grep '.*' /etc/passwd
+# 指定要过滤的字符出现次数
+grep 'o\{2\}' /etc/passwd
+grep 'o\{1,3\}' /etc/passwd
+grep 'o\{1,\}' /etc/passwd
+
+# # egrep工具的使用
+#
+# 过滤出一个或多个指定的字符
+egrep 'o+' test.txt
+egrep 'oo+' test.txt
+# 过滤出零个或一个指定的字符
+egrep 'o?' test.txt
+egrep 'oo?' test.txt
+# 过滤出字符串1或字符串2
+egrep 'uuu|iii' test.txt
+egrep 'r(oo|at)o' test.txt
 ```
 
 #### sed工具的使用
 ```sh
+# # sed -n 'n'p filename
+# n表示第几行
+# -n表示只显示要打印的行
+
+# 指定一个区间打印
+sed -n '1,3'p test.txt
+# 打印包含某个字符串的行(使用正则表达式)
+sed -m '/word/'p filename
+# 使用-e参数可以指定多个条件
+sed -e '1'p -e '/111/'p test.txt
+# 删除某些行
+sed '1'd test.txt
+sed '1,3'd test.txt
+sed '/root/'d test.txt
+# 替换字符或字符串
+sed '1,2s/ot/to/g' test.txt
+# 删除文件中的所有字母
+sed 's/[0-9]//g' test.txt
+# 直接修改文件的内容
+sed -i 's/ot/ro/g' test.txt
 ```
 
 #### awk工具的使用
 ```sh
+# # awk 兼具sed的所有功能
+#
+# 截取文档中的某个段
+# -F 指定分隔符
+# 命令要使用单引号，$n表示第n个分隔段落，$0表示所有分隔段落
+head -n2 /etc/passwd | awk -F ':' '{print $1}'
+# 自定义打印格式
+head -n2 /etc/passwd | awk -F ':' '{print "#"$1"#"$2}'
+# 匹配字符或字符串
+awk '/oo/' test.txt
+awk -F ':' '$1 ~/oo/' test.txt # 以分隔出的字符再进行二次匹配oo
+# 多个匹配条件
+awk -F ':' '/root/ {print $1,$3} /test/ {print $1,$3}' test.txt
+# 条件操作符(> >= < <= != && ||)
+awk -F ':' '$3=="0"' test.txt
+awk -F ':' '$3>40' test.txt
+awk -F ':' '$3>1000 && $4=="/bin/bash"' /etc/passwd
+# awk内置变量
+OFS NF NR
+# # awk的数学计算
+#
+# awk改变某个段值
+head -n3 /etc/passwd | awk -F ':' '$1="root"'
+# 计算某个段的总和
+awk -F ':' '{(tot=tot+$3)}; END {print tot}' /etc/passwd
+# 条件语句
+awk -F ':' '{if ($1=="root") {print $0}}' /etc/passwd
 ```

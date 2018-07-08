@@ -260,3 +260,6 @@ lvcreate -L 2G -n test_lv1 test_vg1 # 提取2G
 lvcreate -l 100 -n test_lv2 test_vg2  # 提取100个pe的大小
 lvcreate -L 2G -n test_lv3 test_vg1 /dev/sdb6 # 指定物理卷提取
 ```
+
+### 自动化运维
+____________
