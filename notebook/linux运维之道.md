@@ -263,3 +263,166 @@ lvcreate -L 2G -n test_lv3 test_vg1 /dev/sdb6 # 指定物理卷提取
 
 ### 自动化运维
 ____________
+
+#### Bash
+```sh
+# 调用历史命令 -- word关键字
+!word
+# 调用历史命令 -- n历史记录编号
+!n
+# 调用历史命令 -- 使用快捷搜索
+命令行：ctrl + r
+# /dev/null -- 无用信息删除
+passwd > /dev/null
+# 使用控制字符控制命令的执行方式
+(; && || &)
+# 花括号使用技巧
+echo {a, b, c}
+echo user{1,5,8}
+echo {0..10}
+echo {0..10..2}
+echo a{2..-1}
+# # 变量的展开替换
+# 如果varname存在且非null，则返回其值，否则返回word
+${varname:-word}
+# 如果varname存在且非null，则返回其值，设置为word
+${varname:=word}
+# 如果varname存在且非null，则返回其值，否则显示varname:word
+${varname:?word}
+# 如果varname存在且非null，则返回word，否则返回null
+${varname:+word}
+
+# 数组
+array=(1 2 3 4 5)
+array[0]=9
+${array[0]}
+
+# 算数运算
+$((x+y))
+$((x-y))
+$((x/y))
+$((x*y))
+$((x%y))
+$((x++))
+$((x--))
+$((x**y)) # 次方
+
+# expr 运算工具
+expr p1 + p2
+expr p1 - p2
+expr p1 \* p2
+expr p1 / p2
+expr p1 % p2
+
+# # test测试命令 和 测试表达式 []
+#
+# FILE是否存在且为目录
+-d FILE
+# 文件是否存在且为普通文件
+-f FILE
+# 文件是否存在且可写
+-w FILE
+# 文件是否存在且非空
+-s FILE
+# 字符串长度非零
+-n STRING
+# 字符串相等
+STRING1 = STRING2
+# 整数1与整数2相等
+INT1 -eq INT2
+# 整数1大于整数2
+INT1 -gt INT2
+# 整数1小于整数2
+INT1 -lt INT2
+
+# # shell符号
+# 正斜线和反斜线
+/ # 命令继续
+\ # 命令转义
+# 单引号解释字面意义
+# 双引号不会屏蔽 ` $ \ 的意义
+# 反引号将命令字符替换为命令输出的结果
+echo `passwd`
+```
+
+#### 正则表达式
+```sh
+# # 基本字符
+#
+# 匹配任意字符
+.
+# 匹配一个字符出现0次或多次
+*
+# 匹配任意多个任意字符
+.*
+# 匹配字符集中的任意一个字符
+[]
+# 匹配连续的字符串范围
+[x-y]
+# 匹配字符串的开头
+^
+# 匹配字符串的结尾
+$
+# 取非集
+[^]
+# 转义
+\
+# 匹配一个字符出现n到m次
+\{n, m\}
+# 匹配至少出现n次
+\{n,}
+# 匹配一个字符出现n次
+\{n}
+# 将\(\)之间的内容存储在“保留空间”，最大存储9个
+\(\)
+# 通过\1至\9调用保留空间中的内容
+\n
+
+# # 正则案例
+grep root /etc/passwd
+grep --color :..0 /etc/passwd
+grep --color 00* /etc/passwd
+grep --color 0[os]t /etc/passwd
+grep --color [0-9] /etc/passwd
+grep --color [f-q] /etc/passwd
+grep --color ^root /etc/passwd
+grep --color root$ /etc/passwd
+grep --color sbin/[^n] /etc/passwd
+grep --color '0\{1,2\}' /etc/passwd  # 0出现1、2次的行
+grep --color '\(root\.*\1)' /etc/passwd # 匹配包含两个root的行
+grep --color '\(root\)\(:\).*\2\1' # 匹配以root:开头和:root结尾的行
+grep --color ^$ /etc/passwd # 过滤文件的空白行
+grep --color -v ^$ /etc/passwd # 过滤文件的非空白行
+
+# # 扩展正则表达式
+#
+# 基本字符
+{n,m} # 等同于\{n,m\}\
++ # 匹配字符出现一次或多次
+? # 匹配字符出现零次或一次
+| # 匹配逻辑或者
+() # 匹配正则集合
+
+# # POSIX规范
+#
+# 基本字符
+[:alpha:] # 字母字符
+[:alnum:] # 字母和数字字符
+[:cntrl:] # 控制字符
+[:digit:] # 数字字符
+[:xdigit:] # 16进制数字字符
+[:punct:] # 标点符号
+[:graph:] # 非空格字符
+[:print:] # 任何可以显示的字符
+[:space:] # 任何可以产生空白的字符
+[:black:] # 空白和Tab字符
+[:lower:] # 小写字符
+[:upper:] # 大写字符
+
+# # GNU规范
+#
+# 基本字符
+\b # 边界字符
+\B # 非边界字符
+
+```
