@@ -4,4 +4,4 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # m h dom mon dow user command
-10,20,30,40,50 * * * * nojsja bash /home/nojsja/github/maintenance/code/shell/battery/check-battery-capacity.sh
+10,20,30,40,50 * * * * nojsja bash /home/nojsja/github/maintenance/code/shell/Desktop/scripts/battery/check-battery-capacity.sh
