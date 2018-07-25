@@ -1,7 +1,4 @@
 #!/bin/bash
-ps aux|grep -v grep|grep wine|cut -c 9-15|xargs kill   
-ps aux|grep -v grep|grep QQ|cut -c 9-15|xargs kill   
-ps aux|grep -v grep|grep qq|cut -c 9-15|xargs kill   
-pkill  plugplay.exe  
-pkill  explorer.exe  
-pkill  services.exe 
+for pnumber in `pgrep QQ`; do
+  kill -9 $pnumber
+done
