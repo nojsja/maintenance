@@ -1,3 +1,7 @@
+"""
+  内部方法
+"""
+
 
 """ ------------------- 使用内部方法重载操作符  ------------------- """
 class Money:
@@ -21,6 +25,7 @@ class Money:
         """ Add 2 Money instances using '+' """
         new_amount = self.amount + self.convert(other).amount
         return Money(self.symbol, new_amount)
+
 
 soda_cost = Money('$', 3.25);
 pizza_cost = Money('￥', 15);
