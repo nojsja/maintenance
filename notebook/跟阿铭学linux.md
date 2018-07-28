@@ -474,3 +474,38 @@ awk -F ':' '{(tot=tot+$3)}; END {print tot}' /etc/passwd
 # 条件语句
 awk -F ':' '{if ($1=="root") {print $0}}' /etc/passwd
 ```
+
+#### linux防火墙
+```sh
+# # selinux -----------
+# 限制太多，配置繁琐，一般会强制关掉
+# 临时关闭selinux
+setenforce 0
+# 修改配置文件永久关闭 -- disabled
+vim /etc/selinux/config
+# 获取selinux状态
+getenforce
+#
+# # netfilter -----------
+# centos7之前的防火墙为netfilter，centos7使用firewalld
+# 很多服务器仍然使用之前的iptables管理
+# 这边先禁用firewalld
+systemctl stop firewalld
+systemctl disable firewalld
+# # netfilter的五个链
+# PREROUTING: 数据包进入路由表之前
+# INPUT: 通过路由表后目的地为本机
+# FORWARDING: 通过路由表后，目的地不为本机
+# OUTPUT: 由本机产生，向外转发
+# POSTROUTTONG: 发送到网卡接口之前
+#
+# # iptables ------------
+# iptables规则文件/etc/sysconfig/iptables
+# centos上默认没有iptables规则
+# 查看规则
+iptables -nvL
+# 清除规则
+iptables -F
+# 保存iptables规则
+service iptables save
+```
