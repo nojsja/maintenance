@@ -477,7 +477,8 @@ awk -F ':' '{if ($1=="root") {print $0}}' /etc/passwd
 
 #### linux防火墙
 ```sh
-# # selinux -----------
+#
+# # selinux ------------------------
 # 限制太多，配置繁琐，一般会强制关掉
 # 临时关闭selinux
 setenforce 0
@@ -486,12 +487,13 @@ vim /etc/selinux/config
 # 获取selinux状态
 getenforce
 #
-# # netfilter -----------
+# # netfilter -----------------------
 # centos7之前的防火墙为netfilter，centos7使用firewalld
 # 很多服务器仍然使用之前的iptables管理
 # 这边先禁用firewalld
 systemctl stop firewalld
 systemctl disable firewalld
+#
 # # netfilter的五个链
 # PREROUTING: 数据包进入路由表之前
 # INPUT: 通过路由表后目的地为本机
@@ -499,7 +501,7 @@ systemctl disable firewalld
 # OUTPUT: 由本机产生，向外转发
 # POSTROUTTONG: 发送到网卡接口之前
 #
-# # iptables ------------
+# # iptables ------------------------
 # iptables规则文件/etc/sysconfig/iptables
 # centos上默认没有iptables规则
 # 查看规则
@@ -508,4 +510,66 @@ iptables -nvL
 iptables -F
 # 保存iptables规则
 service iptables save
+# iptables规则选项
+# -A/-D: 增加或删除一条规则
+# -I: 插入一条规则
+# -p: 指定协议--tcp/udp/icmp
+# --dport: 跟-p一起使用，表示指定目标端口
+# --sport: 跟-p一起使用，表示指定源端口
+# -s: 表示指定源IP/IP段
+# -d: 表示指定目标IP/IP段
+# -j: 后面跟动作，其中ACCEPT表示允许包，DROP表示丢掉包，REJECT表示拒绝包
+# -i: 表示指定网卡
+#
+# 实例:
+# 插入一条规则，把来自1.1.1.1的所有数据包丢掉
+iptables -I INPUT -s 1.1.1.1 -j DROP
+# 删除上个规则，命令格式需一致
+iptables -D INPUT -s 1.1.1.1 -j DROP
+# 把来自2.2.2.2的协议为tcp，到本机80端口的数据包丢掉
+iptables -I INPUT -s 2.2.2.2 -p tcp -dport 80 -j DROP
+# 把发送到10.0.1.14的22端口的数据包丢掉
+iptables -I OUTPUT -p tcp -dport 22 -d 10.0.1.14 -j DROP
+# 让来自192.168.1.0/24这个网段且作用在网卡eth0上的包通过
+iptables -A INPUT -s 192.168.1.0/24 -i eth0 -j ACCEPT
+# 通过查看规则类型和规则编号删除规则
+iptables -nvL --line-numbers
+iptables -D INPUT 1
+# 更改预设策略
+iptables -P INPUT DROP # 预设禁用
+iptables -P INPUT ACCEPT # 预设恢复
+# nat表的应用
+# 假设机器上有两块网卡eth0(10.0.2.68)和eth1(192.168.1.1)，eth0联网了，etho1没有，现在
+# 有另一台机器(192.168.1.2)和eth1是互通的，那么如何设置才能让eth1的机器连上网并与10.0.2.68互通呢？
+# 打开内核路由转发功能
+echo '1' > /proc/sys/net/ipv4/ip_forward
+# 让iptables对nat表做一个IP转发的操作
+# MASQUERADED -- 伪装
+# -o 跟设备名
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth0 -j MASQUERADED
+#
+# 保存和备份iptables规则
+service iptables save
+# 停止防火墙服务
+service iptables stop
+# 备份防火墙规则
+iptables-save > myipt.rule
+# 恢复防火墙规则
+iptables-restore < myipt.rule
+#
+# # firewalld -------------------------
+# CentOS7的防火墙
+# 先关闭iptables，打开filrewalld
+systemctl disable iptables
+systemctl enable firewalld
+systemctl start firewalld
+# firewalld有两个基础概念，分别是zone和service，每一个zones有不同的iptables规则
+# 默认一共9个zone，centos7默认zone为public
+#
+# 获取所有zone
+firewall-cmd --get-zones
+# 查看默认zone
+firewall-cmd --get-default-zone
+# 关于zone的说明
+# 
 ```
