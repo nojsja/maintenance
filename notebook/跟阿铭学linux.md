@@ -429,7 +429,7 @@ egrep 'r(oo|at)o' test.txt
 # 指定一个区间打印
 sed -n '1,3'p test.txt
 # 打印包含某个字符串的行(使用正则表达式)
-sed -m '/word/'p filename
+sed -n '/word/'p filename
 # 使用-e参数可以指定多个条件
 sed -e '1'p -e '/111/'p test.txt
 # 删除某些行
@@ -571,5 +571,5 @@ firewall-cmd --get-zones
 # 查看默认zone
 firewall-cmd --get-default-zone
 # 关于zone的说明
-# 
+#
 ```
