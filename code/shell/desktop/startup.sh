@@ -9,7 +9,7 @@ start() {
   shadowConfig=$shadowPath/shadowsocks.json
 
   rm $shadowPath/nohup.out -f
-  sudo bash $shadowPath/ss-start.sh $shadowConfig
+  bash $shadowPath/ss-start.sh $shadowConfig
 
   # # Tim
   # cd /home/nojsja/Desktop/software/QQ
