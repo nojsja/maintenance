@@ -1,1 +1,1 @@
-nohup sslocal -c shadowsocks.json &
+nohup sslocal -c $1 &
