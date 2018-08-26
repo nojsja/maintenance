@@ -1,0 +1,78 @@
+#!/bin/bash
+# Description: 自动链接文件夹内的可执行程序到桌面应用程序图标列表
+# # example:
+# bash makeIconLink /
+# -d path/to/directory / # 操作目录的绝对路径[necessary]
+# -t targetFileName / # 操作目录内的目标执行程序名[necessary]
+# -i iconName # 操作目录内的图标名[unnecessary]
+#
+
+# # 初始化变量
+directory=''
+target=''
+icon='icon.png'
+
+showUsage() {
+    echo "main: bash makeIconLink"
+    echo "|___ param: -d path/to/directory | target dir's absolute path [necessary]"
+    echo "|___ param: -t targetFileName | app name in target dir [necessary]"
+    echo "|___ param: -i iconName | icon name in target dir [unnecessary]"
+}
+
+# # 载入参数
+while [ -n "$1" ]; do
+    case $1 in
+    -d )
+      directory=$2
+      shift
+    ;;
+    -t )
+      target=$2
+      shift
+    ;;
+    -i )
+      icon=$2
+      shift
+    ;;
+    -h )
+      showUsage
+      exit 0
+    ;;
+    esac
+    shift
+done
+
+# 检测目录
+if [ -z "$directory" -o -z "$target" ]; then
+    echo ">>> param - [d]irectory - [t]argetFileName is necessary !"
+    echo ">>> set usage with -h"
+    exit 1
+fi
+
+# 检测图标文件
+if [ ! -f "$directory/$icon" ]; then
+  echo ">>> the icon file not exits!"
+  exit 1
+fi
+
+# # 链接文件和图标
+lastDirName=`echo $directory | awk -F '/' '{print $NF}'`
+rm "$directory/$lastDirName.desktop" -f
+touch "$directory/$lastDirName.desktop"
+echo "[Desktop Entry]" >> "$directory/$lastDirName.desktop"
+echo "Name=$lastDirName" >> "$directory/$lastDirName.desktop"
+echo "Comment=$lastDirName" >> "$directory/$lastDirName.desktop"
+echo "Exec=$directory/$target" >> "$directory/$lastDirName.desktop"
+echo "Icon=$directory/$icon" >> "$directory/$lastDirName.desktop"
+echo "Terminal=false" >> "$directory/$lastDirName.desktop"
+echo "StartupNotify=true" >> "$directory/$lastDirName.desktop"
+echo "Type=Application" >> "$directory/$lastDirName.desktop"
+echo "Categories=Application" >> "$directory/$lastDirName.desktop"
+
+# # 创建图标链接
+sudo chmod a+x "$directory/$lastDirName.desktop"
+sudo ln -s "$directory/$lastDirName.desktop" /usr/share/applications/
+
+echo ">>> make icon link done!"
+echo ">>> set $directory/$lastDirName.desktop -> /usr/share/applications/$lastDirName.desktop"
+echo ">>> now check your application lists."
