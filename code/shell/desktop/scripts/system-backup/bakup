@@ -1,0 +1,121 @@
+#!/bin/bash
+# # 备份指定目录脚本
+
+# # 设置需要处理的目录 ------------------
+# abs_dirs -- 绝对路径
+targetDir="/media/nojsja/XiJie_mobileDisk/ubuntu18.04_backup"
+
+virtualBoxDir="/home/nojsja/software/VirtualBox"
+steamDir="/home/nojsja/.steam"
+
+nojsjaHomeDir="/home/nojsja"
+etcDir="/etc"
+bootDir="/boot"
+varDir="/var"
+optDir="/opt"
+usrDir="/usr"
+usrBinDir="/usr/bin"
+rootDir="/root"
+libDir="/lib"
+lib64Dir="/lib64"
+sbinDir="/sbin"
+cacheDir="/home/nojsja/.cache"
+videoDir="/home/nojsja/Videos"
+
+# public_dirs -- 公共单一文件路径名
+nodeModulesDir="node_modules"
+
+# 绝对忽略
+absolute_ignore_dirs=($virtualBoxDir $steamDir $cacheDir $videoDir)
+# 公用忽略
+public_ignore_dirs=($nodeModulesDir)
+# 所有备份
+allBackupDirs=($nojsjaHomeDir $etcDir $bootDir
+ $varDir $optDir $usrDir $usrBinDir $rootDir
+ $libDir $lib64Dir $sbinDir)
+
+# # 检测硬盘是否挂载 ------------------
+if [ ! -d $targetDir ]; then
+  echo ">>> XiJie mobileDisk is not mounted，please mount it to /media/nojsja at first ... "
+  exit 1
+fi
+
+# # 所有备份按照大小排序 ------------------
+allBackupDirs_size=()
+
+for ((i = 0; i < ${#allBackupDirs[@]}; i++)); do
+  allBackupDirs_size[$i]=$(sudo du -s -m ${allBackupDirs[$i]} | awk -F ' ' '{print $1}');
+done;
+
+echo ">>> origin: ${allBackupDirs_size[@]}"
+
+for (( i = 0; i < ${#allBackupDirs_size[@]}; i++ )); do
+  max=0
+  for (( j = 0; j < ${#allBackupDirs_size[@]} - $i; j++ )); do
+    if [ ${allBackupDirs_size[$j]} -gt ${allBackupDirs_size[$max]} ]; then
+      max=$j
+    fi
+  done
+  temp=${allBackupDirs_size[$j-1]}
+  allBackupDirs_size[$j-1]=${allBackupDirs_size[$max]}
+  allBackupDirs_size[$max]=$temp
+
+  temp=${allBackupDirs[$j-1]}
+  allBackupDirs[$j-1]=${allBackupDirs[$max]}
+  allBackupDirs[$max]=$temp
+done
+
+echo ">>> sorted dirs's size(MB): ${allBackupDirs_size[@]}"
+echo ">>> sorted dirs: ${allBackupDirs[@]}"
+
+echo ">>> total dirs count: ${#allBackupDirs[@]}"
+
+# 进程数 == 逻辑cpu个数
+process_count=$(cat /proc/cpuinfo | grep "processor" | wc -l)
+echo ">>> total process count: $process_count"
+
+# # 多进程复制 ------------------
+copyFile() {
+  excludeParams=''
+  for param in ${absolute_ignore_dirs[@]}; do
+    excludeParams=" $excludeParams --exclude=$param "
+  done
+  bash copy-file -o $1 -t $targetDir -- $excludeParams
+  # 表示进程结束，放入换行符号到tmp
+  echo -ne "\n" 1>&9
+}
+# 定义描述符为9的管道;
+rm tmp -f
+mkfifo tmp
+exec 9<> tmp
+# 预先写入指定数量的换行符，一个换行符代表一个进程;
+for (( i = 0; i < $process_count; i++))
+do
+  echo -ne "\n" 1>&9
+done
+startTime=`date +%Y-%m-%d[%H:%M:%S]`
+echo ">>> starting backup jobs at $startTime"
+
+for (( i = ${#allBackupDirs[@]} - 1; i >= 0; i-- )); do
+  # 进程控制;
+  read -u 9
+  {
+    copyFile ${allBackupDirs[$i]}
+  } &
+done
+
+# 等待子进程执行完成
+wait
+
+echo ">>> starting backup jobs at $startTime"
+echo ">>> backup jobs completed at `date +%Y-%m-%d[%H:%M:%S]`"
+rm tmp
+
+#
+#
+# while [ -n $1 ]; do
+#   case $1 in
+#     -d )
+#       ;;
+#   esac
+# done

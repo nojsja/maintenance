@@ -11,15 +11,6 @@ start() {
   rm $shadowPath/nohup.out -f
   bash $shadowPath/ss-start.sh $shadowConfig
 
-  # # Tim
-  # cd /home/nojsja/Desktop/software/QQ
-  # nohup ./TIM-x86_64.AppImage &
-
-  # # Wechat
-  # cd /home/nojsja/software/wechat/electronic-wechat-linux-x64/
-  # rm nohup.out -f
-  # nohup ./electronic-wechat &
-
   # # Battery check
   statusFile=/sys/class/power_supply/BAT0/status
   nowStatus=$(cat $statusFile)

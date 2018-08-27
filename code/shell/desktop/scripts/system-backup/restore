@@ -1,0 +1,3 @@
+#!/bin/bash
+originPath="/media/nojsja/XiJie_mobileDisk/ubuntu18.04_backup"
+bash replace-file $originPath

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# # Path
+sourcePath="$1"
+
+function getSourceFile() {
+  local basePath=$1
+
+  if [ -d $basePath ]; then
+    for onePath in `ls $basePath -A`; do
+      getSourceFile "$basePath/$onePath"
+    done
+  elif [ -f $basePath ]; then
+    local fileName=$(echo $basePath | awk -F '/' '{print $NF}')
+    local originPath=$(echo $basePath | awk -F "/$fileName" '{print $1}')
+    replaceFile $originPath $sourcePath $fileName # targetPath infinityPath fileName
+  fi
+}
+
+# # Replace  Files
+function replaceFile() {
+  local originPath=$1
+  local prePath=$2
+  local fileName=$3
+  local targetPath=$(echo $originPath | awk -F "$prePath/" '{print $2}')
+
+  sudo mkdir -p "/$targetPath"
+  echo ">>> decompress $fileName: $originPath/$fileName => /$targetPath"
+  tar -xf $originPath/$fileName -C /$targetPath -f
+}
+
+# # checkPath
+getSourceFile $sourcePath

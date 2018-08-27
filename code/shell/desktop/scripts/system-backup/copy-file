@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# # Path
+while [ -n "$1" ]; do
+  case $1 in
+    -o )
+      originPath="$2"
+      shift
+    ;;
+    -t )
+      targetPath="$2"
+      shift
+    ;;
+    -- )
+      shift
+      break;
+      ;;
+  esac
+  shift
+done
+
+excludeDirs=$*
+fileName=$(echo $originPath | awk -F '/' '{print $NF}')
+prePath=$(echo $originPath | awk -F "/$fileName" '{print $1}')
+echo ">>> compress: $originPath -> "$targetPath"$prePath/$fileName.gzip"
+sudo mkdir -p $targetPath
+sudo mkdir -p "$targetPath"$prePath
+sudo rm "$targetPath"$prePath/$fileName.gzip -f
+sudo tar -czPf "$targetPath"$prePath/$fileName.gzip  $originPath "$excludeDirs"
