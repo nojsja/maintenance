@@ -18,12 +18,13 @@
 [dir ] ............... snippets -- 代码段  
 
 [dir ] .......... shell  
-[dir ] ............... desktop -- 桌面脚本  
+[dir ] ............... desktop -- 桌面环境脚本  
 [dir ] ............... file -- 文件操作  
 [dir ] ............... network -- 网络管理  
+[dir ] ............... pip -- 管道  
+[dir ] ............... process -- 进程  
 [dir ] ............... snippets -- 代码段  
 [dir ] ............... thread -- 多线程  
-
 
 [dir ] ..... notebook -- 读书笔记  
 [file] .......... docker.md  
