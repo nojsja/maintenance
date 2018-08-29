@@ -26,7 +26,7 @@ function replaceFile() {
 
   sudo mkdir -p "/$targetPath"
   echo ">>> decompress $fileName: $originPath/$fileName => /$targetPath"
-  tar -xf $originPath/$fileName -C /$targetPath -f
+  tar -xf $originPath/$fileName -C /$targetPath
 }
 
 # # checkPath
