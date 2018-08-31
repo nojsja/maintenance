@@ -1,0 +1,54 @@
+#!/bin/bash
+#add for chkconfig
+#chkconfig:23456 80 20
+#description: yapi-service auto start
+
+yapi="/opt/Web/my-yapi/vendors"
+
+start() {
+  pm2 start "$yapi/server/app.js" \
+  --name "yapi-service" \
+  --restart-delay 1000 \
+  --service-name pm2-yapi \
+  --max-memory-restart 500M \
+  --max-restarts 10 \
+  --env production
+}
+
+stop() {
+  pm2 stop yapi-service
+}
+
+delete() {
+  pm2 delete yapi-service
+}
+
+reload() {
+  pm2 reload yapi-service
+}
+
+# # Main Action
+case $1 in
+
+  --start | start )
+    start
+  ;;
+
+  --stop | stop )
+    stop
+  ;;
+
+  --reload | reload )
+    reload
+  ;;
+
+  --restart | restart )
+    delete
+    start
+  ;;
+
+  --delete | delete )
+    delete
+  ;;
+
+esac

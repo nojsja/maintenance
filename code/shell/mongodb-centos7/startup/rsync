@@ -1,0 +1,194 @@
+#!/bin/bash
+
+# # 变量读取
+# var -- MongodbDir
+for var in `cat /etc/frontend`; do
+  a=`echo $var | awk -F '=' '{print $1}'`
+  b=`echo $var | awk -F '=' '{print $2}'`
+  export $a=$b
+done
+
+# # 检查rsync环境安装情况 -------------------
+checkRsync() {
+  local confFile=/etc/rsyncd.conf
+  local passwdFile=/etc/rsyncd.password
+  local rsyncInfo=$(rpm -qa rsync)
+  local xinetdInfo=$(rpm -qa xinetd)
+  echo ">>> check rsync env ... "
+
+  if [ ! -f "$confFile" -o ! -f "$passwdFile" ]; then
+    echo ">>> please run 'bash rsync --init' first ... "
+    return 1
+  fi
+
+  if [ -z "$rsyncInfo" -o -z "$xinetdInfo" ]; then
+    echo ">>> please run 'bash rsync --init' first ... "
+    return 1
+  fi
+
+  return 0
+}
+
+# # 配置rsync环境 -------------------
+configRsync() {
+  echo ">>> config rsync.env ..."
+
+  local confFile=/etc/rsyncd.conf
+  local passwdFile=/etc/rsyncd.password
+  rm $confFile
+  rm $passwdFile
+  touch $confFile
+  touch $passwdFile
+
+  # config rsyncd.conf
+  echo "uid = root" >> $confFile
+  echo "gid = root" >> $confFile
+  echo "user chroot = no" >> $confFile
+  echo "max connections = 2" >> $confFile
+  echo "timeout = 600" >> $confFile
+  echo "pid file = /var/run/rsyncd.pid" >> $confFile
+  echo "lock file = /var/run/rsyncd.lock" >> $confFile
+  echo "log file = /var/run/rsyncd.log" >> $confFile
+
+  echo '' >> $confFile
+
+  echo "[mongo_backup]" >> $confFile
+  echo "path = /root/mongodb" >> $confFile
+  echo "ignore errors" >> $confFile
+  echo "read only = no" >> $confFile
+  echo "list = no" >> $confFile
+  # echo "hosts allow = 192.168.199.0/255.255.255.0" >> $confFile
+  echo "auth users = root"
+  echo "secrets file = /etc/rsyncd.password"
+
+  # config rsyncd.password
+  echo "root:daemon" >> $passwdFile
+
+  chmod 600 $passwdFile
+}
+
+# # 安装rsync环境 -------------------
+initRsync() {
+  echo ">>> init rsync.service ..."
+  # 安装rsync同步软件
+  if [ -z "`rpm -qa rsync`" ]; then
+    echo ">>> install rsync ..."
+    rpm install -y rsync
+  fi
+
+  # 安装xinetd
+  if [ -z "`rpm -qa xinetd`" ]; then
+    echo ">>> install xinetd ..."
+    yum -y install xinetd
+  fi
+
+  # 配置xinetd
+  echo ">>> config rsync.conf ..."
+  local rsynconf=/etc/xinetd.d/rsync
+  rm $rsynconf -f
+  touch $rsynconf
+
+  echo "service rsync {" >> $rsynconf
+  echo "disable = no" >> $rsynconf
+  echo "flags = IPv6" >> $rsynconf
+  echo "socket_type = stream" >> $rsynconf
+  echo "wait = no" >> $rsynconf
+  echo "user = root" >> $rsynconf
+  echo "server = /usr/bin/rsync" >> $rsynconf
+  echo "server_args = --daemon --config=/etc/rsyncd.conf" >> $rsynconf
+  echo "log_on_failure += USERID" >> $rsynconf
+  echo "}" >> $rsynconf
+
+  # 配置rsync
+  configRsync
+
+  # 启动xinetd -- server
+  echo ">>> start xinetd.service ..."
+  xinetd start
+  chkconfig xinetd on
+
+  echo ">>> rsync init done !"
+}
+
+# # 发送备份文件 -------------------
+sendBackup() {
+  # 检查环境
+  checkRsync
+  if [[ "$?" == 1 ]]; then
+    initRsync
+  fi
+  local ip=$1
+  echo ">>> rsync sending mongodb-backup-file to $ip ... "
+  rsync -avz "$BackupPath" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
+  rsync -avz "$DumpPath" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
+  echo ">>> rsync send backup file done !"
+}
+
+# # 获取备份文件 -------------------
+getBackup() {
+  # 检查环境
+  checkRsync
+  if [[ "$?" == 1 ]]; then
+    exit 0
+  fi
+
+  local ip=$1
+  if [ -z "$ip" ]; then
+    echo ">>> please give the remote ip address ... "
+    exit 0
+  fi
+
+  echo ">>> get mongodb-backup-file from $ip ... "
+  rsync -avz root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password "$BackupPath/../"
+  echo ">>> get mongodb-backup-file from $ip done ! "
+}
+
+# # 开启rsync服务
+start() {
+  checkRsync
+  echo ">>> try to start rsync in daemon ... "
+  rsync --daemon
+}
+
+# # 停止rsync服务
+stop() {
+  checkRsync
+  pkill rsync
+  echo ">>> kill rsync process done! "
+}
+
+# # 展示帮助信息 -------------------
+showUsage() {
+  echo
+  echo "main: bash rsync [--param]"
+  echo "|___ param: [--send     ] [ip]  => target host's ip (necessary)"
+  echo "       |___ example: bash rsync --send 10.0.6.231"
+  echo
+  echo "|___ param: [--get      ] [ip]  => target host's ip (necessary)"
+  echo "       |___ example: bash rsync --get 10.0.6.231"
+  echo
+  echo "|___ param: [--init     ]       => init rsync env"
+  echo "|___ param: [--start    ]       => start rsync service"
+  echo "|___ param: [--stop     ]       => stop rsync service"
+  echo "|___ param: [--help | -h]       => help info"
+  echo
+}
+
+# # main
+case $1 in
+  --send )
+    sendBackup $2
+  ;;
+  --init )
+    initRsync
+  ;;
+  --start )
+    start
+  ;;
+  --get )
+    getBackup $2
+  ;;
+  --help | -h )
+    showUsage
+  ;;
+esac

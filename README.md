@@ -20,6 +20,7 @@
 [dir ] .......... shell  
 [dir ] ............... desktop -- 桌面环境脚本  
 [dir ] ............... file -- 文件操作  
+[dir ] ............... mongodb-centos7 -- mongodb管理脚本  
 [dir ] ............... network -- 网络管理  
 [dir ] ............... pip -- 管道  
 [dir ] ............... process -- 进程  

@@ -1,0 +1,6 @@
+
+# mongodb备份定时任务
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+# minute   hour   day   month   week   user   command
+* 0-23/5 * * * root bash /opt/Web/mongodb-centos7/startup/mongodb --backup 10.0.6.231
