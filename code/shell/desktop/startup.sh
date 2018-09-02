@@ -11,6 +11,9 @@ start() {
   rm $shadowPath/nohup.out -f
   bash $shadowPath/ss-start.sh $shadowConfig
 
+  # # SpotLight
+  albert > /dev/null 1>&2 &
+
   # # Battery check
   statusFile=/sys/class/power_supply/BAT0/status
   nowStatus=$(cat $statusFile)
