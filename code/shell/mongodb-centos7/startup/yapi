@@ -6,13 +6,15 @@
 yapi="/opt/Web/my-yapi/vendors"
 
 start() {
-  pm2 start "$yapi/server/app.js" \
-  --name "yapi-service" \
-  --restart-delay 1000 \
-  --service-name pm2-yapi \
-  --max-memory-restart 500M \
-  --max-restarts 10 \
-  --env production
+  if [ -d "$yapi" ]; then
+    pm2 start "$yapi/server/app.js" \
+    --name "yapi-service" \
+    --restart-delay 1000 \
+    --service-name pm2-yapi \
+    --max-memory-restart 500M \
+    --max-restarts 10 \
+    --env production
+  fi
 }
 
 stop() {

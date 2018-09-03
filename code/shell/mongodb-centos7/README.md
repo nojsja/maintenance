@@ -90,7 +90,7 @@ bash mongodb --restart
 # # 重载
 bash mongodb --clean
 # # 备份数据到本地和远程主机
-bash mongodb --backup
+bash mongodb --backup [ip]
 # # 从本地或远程恢复数据
 bash mongodb --restore [ip]
 # # 设置备份定时任务

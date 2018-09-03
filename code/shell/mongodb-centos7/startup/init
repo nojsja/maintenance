@@ -67,4 +67,4 @@ sudo chmod a+x /etc/init.d/yapi
 chkconfig --add /etc/init.d/yapi
 chkconfig yapi on
 
-echo "done."
+echo ">>> init done."

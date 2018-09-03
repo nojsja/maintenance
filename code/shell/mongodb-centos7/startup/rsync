@@ -107,6 +107,9 @@ initRsync() {
   xinetd start
   chkconfig xinetd on
 
+  # 创建数据库备份目录
+  mkdir -p /root/mongodb
+
   echo ">>> rsync init done !"
 }
 

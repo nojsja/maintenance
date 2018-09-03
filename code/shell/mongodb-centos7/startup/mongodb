@@ -229,13 +229,13 @@ setCronTab() {
   touch "$scheduleFile"
 
   echo "# mongodb备份定时任务" >> $scheduleFile
-  echo "SHELL=/bin/sh" >> $scheduleFile
+  echo "SHELL=/bin/bash" >> $scheduleFile
   echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $scheduleFile
   echo "" >> $scheduleFile
   echo "# minute   hour   day   month   week   command" >> $scheduleFile
-  echo "$timeRule root bash $MongodbPath/startup/mongodb --backup $ip" >> $scheduleFile
+  echo "$timeRule bash $MongodbPath/startup/mongodb --backup $ip" >> $scheduleFile
 
-  # 删除旧的crontab人物
+  # 删除旧的crontab任务
   disableCronTab
   crontab -u root $scheduleFile
   echo ">>> enable the mongodb-backup crontab service done!"
