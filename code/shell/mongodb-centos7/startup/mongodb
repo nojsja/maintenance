@@ -25,7 +25,7 @@ port=27017
 
 # # Function
 
-# # 停止pm2进程 --------------
+# # 停止pm2进程 ----------------
 stop() {
   echo ">>> going to shutdown mongodb ... "
   mongod --shutdown --dbpath "$dbpath"
@@ -66,6 +66,7 @@ clean() {
     exit 0
   fi
 
+  backup
   stop
   rm "$dbpath" -rf
   rm "$dblogpath" -rf
@@ -76,28 +77,47 @@ clean() {
   echo
 }
 
+# # 清理远程的备份文件 -------------------
+cleanRemoteBackup() {
+  ip="$1"
+
+  read -p "are you sure to wipe remote mongodb backup file on $ip (y/n) ? > " -a choise
+  if [[ "$choise" != "y" ]]; then
+    exit 0
+  fi
+
+  if [ -n "$ip" ]; then
+    echo ">>> now delete remote backup files ... "
+    ssh root@"$ip" rm -r -f "/root/mongodb/backup" "/root/mongodb/dump"
+    backup $ip
+    echo ">>> clean remote mongodb backup file and re-backup done ! "
+  else
+    echo ">>> command [--clean-remote] need param [ip]"
+    echo ">>> see usage with [--help | -h]"
+    exit 0;
+  fi
+}
+
 # # 备份mongodb数据 --------------
 # mongodump -h 127.0.0.1 -d yapi -o /root/mongodb/dump/
 # 备份分为硬备份(拷贝数据库源数据、日志)和dump导出备份(只导出yapi)
 backup() {
   echo ">>> now backup mongodb data and logs ... "
-  local ip="10.0.6.231"
+  local ip="$1"
   local backupPath="/`whoami`/mongodb/backup"
   local dumpPath="/`whoami`/mongodb/dump"
   local today=$(date +%Y-%m-%d)
   local lastDbPath=$(echo $dbpath | awk -F '/' '{print $NF}')
-  local lastLogPath=$(echo $dblogpath | awk -F '/' '{print $NF}')
-  if [ -n "$1" ]; then
-    ip=$1
-  fi
+  local lastLogPath=$(echo $dblogpath | awk -F "/" '{print $NF}')
+
   mkdir $backupPath -p
   mkdir $dumpPath -p
 
   # 硬备份数据和日志文件到本地
   echo ">>> packaging logs and data to $backupPath ... "
   rm /$whoami/mongodb/backup/* -f
-  tar -czPf /$whoami/mongodb/backup/"${lastDbPath}_$today.gzip" $dbpath
-  tar -czPf /$whoami/mongodb/backup/"${lastLogPath}_$today.gzip" $dblogpath
+  tar -czf /$whoami/mongodb/backup/"${lastDbPath}_$today.gzip" -C $dbpath/../ $lastDbPath
+  tar -czf /$whoami/mongodb/backup/"${lastLogPath}_$today.gzip" -C $dbpath/../ $lastLogPath
   # 记录路径
   sed '/BackupPath=/'d /etc/frontend -i
   sed '/DumpPath=/'d /etc/frontend -i
@@ -106,12 +126,25 @@ backup() {
 
   # dump导出yapi数据库到本地
   echo ">>> dumping logs and data to $dumpPath ... "
-  mongodump -h 127.0.0.1 -d yapi -o "$dumpPath"
-  tar -czPf "$dumpPath/yapi.gzip" "$dumpPath/yapi"
-  rm "$dumpPath/yapi" -rf
+
+  rm "$dumpPath"/* -rf
+
+  mongodump -h 127.0.0.1 -d 'yapi' -o "$dumpPath"
+  mongodump -h 127.0.0.1 -d 'admin' -o "$dumpPath"
+  mongodump -h 127.0.0.1 -d 'config' -o "$dumpPath"
+  mongodump -h 127.0.0.1 -d 'local' -o "$dumpPath"
+
+  for dp in $(ls $dumpPath); do
+    if [ -d "$dumpPath/$dp" ]; then
+      tar -czf "$dumpPath/$dp.gzip" -C "$dumpPath" "$dp"
+      rm "$dumpPath/$dp" -rf
+    fi
+  done
 
   # 所有数据备份到远程机器
-  bash "$MongodbPath/startup/rsync" --send "$ip"
+  if [ -n "$ip" ]; then
+    bash "$MongodbPath/startup/rsync" --send "$ip"
+  fi
 
   echo
   echo ">>> mongodb backup done ... "
@@ -177,13 +210,13 @@ restore() {
 
     if [ -f "$BackupPath/$dataFile" ]; then
       rm $MongodbPath/data -rf
-      tar -xPf $BackupPath/$dataFile -C $MongodbPath
+      tar -xf "$BackupPath"/$dataFile -C $MongodbPath
       echo ">>> mongodb data file restore done!"
     fi
 
     if [ -f "$BackupPath/$logFile" ]; then
       rm $MongodbPath/logs -rf
-      tar -xPf $BackupPath/$logFile -C $MongodbPath
+      tar -xf "$BackupPath"/$logFile -C $MongodbPath
       echo ">>> mongodb log file restore done!"
     fi
 
@@ -193,9 +226,15 @@ restore() {
 
   else
 
-    tar -xPf "$DumpPath"/yapi.gzip -C "$DumpPath"
-    rm "$DumpPath"/yapi.gzip -f
-    mongorestore -h 127.0.0.1 -d yapi "$DumpPath"/yapi
+    local baseName=''
+    for dp in $(ls $DumpPath); do
+      if [ -f "$DumpPath/$dp" ]; then
+        baseName=$(basename "$dp" .gzip)
+        tar -xf "$DumpPath"/$dp -C "$DumpPath"
+        mongorestore -h 127.0.0.1 -d $baseName "$DumpPath"/$baseName
+        rm "$DumpPath/$baseName" -rf
+      fi
+    done
 
   fi
 
@@ -208,6 +247,7 @@ restore() {
 # # 设置定时备份任务每天每五小时备份一次 -----------------
 setCronTab() {
   local timeRule="* 0-23/5 * * * "
+
   local ip=""
   local scheduleFile="$MongodbPath/startup/rsync-schedule"
 
@@ -228,7 +268,7 @@ setCronTab() {
   rm "$scheduleFile" -f
   touch "$scheduleFile"
 
-  echo "# mongodb备份定时任务" >> $scheduleFile
+  echo "# # mongodb备份定时任务" >> $scheduleFile
   echo "SHELL=/bin/bash" >> $scheduleFile
   echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $scheduleFile
   echo "" >> $scheduleFile
@@ -247,29 +287,30 @@ disableCronTab() {
   echo ">>> disable the mongodb-backup crontab service done!"
 }
 
-# # 显示帮助信息
+# # 显示帮助信息 ----------------------
 showUsage() {
   echo
   echo "main: bash mongodb [--param]"
-  echo "|___ param: [--start   | start  ]      => start mongodb.service"
-  echo "|___ param: [--stop    | stop   ]      => stop mongodb.service"
-  echo "|___ param: [--restart | restart]      => restart mongodb.service"
-  echo "|___ param: [--clean   | clean  ]      => wipe mongodb data and restart"
-  echo "|___ param: [--backup  | backup ] [ip]          => backup mongodb data to local and remote(if you set the param [ip])"
+  echo "|___ param: [--start   | start   ]      => start mongodb.service"
+  echo "|___ param: [--stop    | stop    ]      => stop mongodb.service"
+  echo "|___ param: [--restart | restart ]      => restart mongodb.service"
+  echo "|___ param: [--clean   | clean   ]      => wipe mongodb data and restart"
+  echo "|___ param: [--clean-remote | -cr] [ip]          => clean remote [ip]'s mongodb backup file before today(`date +%Y-%m-%d`)"
+  echo "|___ param: [--backup  | backup  ] [ip]          => backup mongodb data to local and remote(if you set the param [ip])"
   echo "       |___ example: bash mongodb --backup 10.0.6.231"
   echo "       |___ example: bash mongodb backup 10.0.6.231"
   echo "       |___ example: bash mongodb backup"
   echo
-  echo "|___ param: [--restore | restore] [ip] [--dump] => restore mongodb data from local or remote(if you set the param [ip])"
+  echo "|___ param: [--restore | restore ] [ip] [--dump] => restore mongodb data from local or remote(if you set the param [ip])"
   echo "       |___ example: bash mongodb --restore --dump 10.0.6.231"
   echo "       |___ example: bash mongodb --restore 10.0.6.231 --dump"
   echo "       |___ example: bash mongodb --restore 10.0.6.231"
   echo "       |___ example: bash mongodb restore 10.0.6.231"
   echo "       |___ example: bash mongodb restore"
   echo
-  echo "|___ param: [--crontab          ]      => enable mongodb-backup service crontab service"
-  echo "|___ param: [--drontab          ]      => disable mongodb-backup service crontab service"
-  echo "|___ param: [--help    | -h     ]      => show help info"
+  echo "|___ param: [--crontab           ]      => enable mongodb-backup service crontab service"
+  echo "|___ param: [--drontab           ]      => disable mongodb-backup service crontab service"
+  echo "|___ param: [--help    | -h      ]      => show help info"
   echo
 }
 
@@ -290,6 +331,11 @@ case $1 in
 
   --clean | clean )
     clean
+  ;;
+
+  --clean-remote | -cr )
+    shift
+    cleanRemoteBackup $@
   ;;
 
   --backup | backup)
@@ -313,4 +359,5 @@ case $1 in
   --drontab )
     disableCronTab
   ;;
+
 esac

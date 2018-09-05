@@ -79,20 +79,31 @@ systemctl clean mongodb
 #
 # # 2. 手动执行脚本文件(指定目录下) ------------------------
 # # 查看帮助信息
-bash mongodb --help
-# # startup目录下
+bash mongodb [--help | -h]
+# # 在startup目录下执行命令
+#
 # # 启动
 bash mongodb --start
 # # 停止
 bash mongodb --stop
 # # 重启
 bash mongodb --restart
-# # 重载
+# # 清除mongodb数据库数据并重启
 bash mongodb --clean
+# # 备份数据到本地
+bash mongodb --backup
 # # 备份数据到本地和远程主机
 bash mongodb --backup [ip]
-# # 从本地或远程恢复数据
+# # 从本地强制恢复数据 - 直接覆盖文件
+bash mongodb --restore
+# # 从远程强制恢复数据 - 直接覆盖文件
 bash mongodb --restore [ip]
+# # 从本地的dump文件恢复yapi数据 - 使用mongodb dump/restore 命令
+bash mongodb --restore --dump
+# # 从远程的dump文件恢复yapi数据 - 使用mongodb dump/restore 命令
+bash mongodb --restore [ip] --dump
+# # 清理远程备份主机上的多余备份数据，只保留今天的备份数据[这个需要管理员手动执行清理]
+bash mongodb --clean-remote [ip]
 # # 设置备份定时任务
 bash mongodb --crontab [schedule]
 # # 取消备份定时任务
