@@ -9,27 +9,7 @@
 basic='.233'  # 默认设置的ip地址
 gateway=`route -n | sed -n '3'p | awk -F " " '{print $2}'`  # 默认获取所在网关
 
-# # 获取所有传入参数
-while [ -n "$1" ]; do
-  case $1 in
-    -g )
-      gateway=$2
-      shift
-    ;;
-    -s )
-      echo $2
-      basic=.`expr $2 + 0`
-      shift
-    ;;
-    -- )
-      shift
-      break
-    ;;
-  esac
-  shift
-done
-
-# # 网络变换时自动根据网关配置
+# # update network config file
 # (! test -z $2) && basic=".$2" || basic='.233' # 替换的地址
 
 # 修改配置文件
@@ -39,7 +19,11 @@ done
 #  param3 dns1    => 主dns
 #  param4 path    => 要更改的脚本路径
 function configNetwork() {
-  ipaddr=$1; gateway=$2; netmask=$3; dns1=$4; path=$5
+  local ipaddr=$1;
+  local gateway=$2;
+  local netmask=$3;
+  local dns1=$4;
+  local path=$5
 
   sed -i '/defined configure/'d $path
   echo "# # defined configure --------" >> $path
@@ -51,22 +35,65 @@ function configNetwork() {
   sed -i '/ONBOOT/'d $path ; echo "ONBOOT=yes" >> $path
 }
 
-dns1='119.29.29.29'  # 主dns设置
-netmask='255.255.255.0'  # 子网掩码
-ipaddr=`echo $gateway | awk -v b=$basic -F '.' '{printf "%s.%s.%s",$1,$2,$3b}'`  # 组装后的ip地址
+# # show help info
+showUsage() {
+  echo
+  echo 'main: bash static-ip-config [options] [value]'
+  echo ' |____ option : [-g  |  --gateway] [value]      => set the gateway (necessary)'
+  echo ' |____ option : [-s  |  --segment] [value]      => set the network segment (necessary)'
+  echo ' |____ example: bash static-ip-config -g 10.0.6.1 -s 233'
+  echo '          |____ result: ipaddr -> 10.0.6.233'
+  echo ' |____ example: bash static-ip-config --gateway 10.0.6.1 --segment 231'
+  echo '          |____ result: ipaddr -> 10.0.6.231'
+  echo
+}
 
-echo ">>> the gateway is: $gateway"
-echo ">>> the ip is: $ipaddr"
-
-echo ">>> updating network-scripts..."
-bpath='/etc/sysconfig/network-scripts'
-for path in `find $bpath -name 'ifcfg-*'`; do
-  if [[ $path == "$bpath/ifcfg-lo" || $path =~ "bak" ]]; then
-    continue
-  fi
-  echo ">>> now going to config: $path"
-  configNetwork $ipaddr $gateway $netmask $dns1 $path
+# # set all params
+while [ -n "$1" ]; do
+  case $1 in
+    -g | --gateway )
+      gateway=$2
+      shift
+    ;;
+    -s | --segment )
+      basic=.`expr $2 + 0`
+      shift
+    ;;
+    --help | -h )
+      showUsage
+      exit 0
+    ;;
+    -- )
+      shift
+      break
+    ;;
+  esac
+  shift
 done
 
-echo ">>> restarting network..."
-systemctl restart network  # 重启网络
+# # MAIN
+MAIN() {
+
+  dns1='119.29.29.29'  # 主dns设置
+  netmask='255.255.255.0'  # 子网掩码
+  ipaddr=`echo $gateway | awk -v b=$basic -F '.' '{printf "%s.%s.%s",$1,$2,$3b}'`  # 组装后的ip地址
+
+  echo ">>> the gateway is: $gateway"
+  echo ">>> the ip is: $ipaddr"
+
+  echo ">>> updating network-scripts..."
+  bpath='/etc/sysconfig/network-scripts'
+  for path in `find $bpath -name 'ifcfg-*'`; do
+    if [[ $path == "$bpath/ifcfg-lo" || $path =~ "bak" ]]; then
+      continue
+    fi
+    echo ">>> now going to config: $path"
+    configNetwork $ipaddr $gateway $netmask $dns1 $path
+  done
+
+  echo ">>> restarting network..."
+  systemctl restart network  # 重启网络
+
+}
+
+MAIN
