@@ -66,7 +66,7 @@ chmod -R 700 target # 数字更改权限
 chmod -R u=rwx,og=rx target  # 字母更改权限
 chmod -R u-x target # 字母减少权限
 chmod -R a+x target # 字母所有增加权限
-```####
+```
 
 5. 更改文件的默认权限umask
 ```sh
@@ -123,7 +123,6 @@ _________________
 
 ### 磁盘管理
 __________
-
 
 #### 查看磁盘或目录的容量
 
@@ -363,7 +362,7 @@ myname="johnson"Young
 6. ~/.bash_logout
 >当退出shell时会执行该文件，文件中可以放一些清理的工作。  
 
-### 正则表达式
+### 三神器 grep / sed / awk
 ____________
 
 #### grep工具的使用
@@ -378,7 +377,7 @@ ____________
 -n
 # 打印不符合要求的行
 -v
-# 跟一个数字，例如A2表示打印符合要求的行及下面两行
+# 跟一个数字，例如A2表示打印符合要求的行及上面两行
 -A2
 # 跟一个数字，例如A2表示打印符合要求的行及下面两行
 -B2
@@ -475,7 +474,8 @@ awk -F ':' '{(tot=tot+$3)}; END {print tot}' /etc/passwd
 awk -F ':' '{if ($1=="root") {print $0}}' /etc/passwd
 ```
 
-#### linux防火墙
+### linux防火墙
+--------------
 ```sh
 #
 # # selinux ------------------------
@@ -571,5 +571,107 @@ firewall-cmd --get-zones
 # 查看默认zone
 firewall-cmd --get-default-zone
 # 关于zone的说明
+# drop -- 丢弃
+# block -- 限制
+# public -- 公共
+# external-- 外部
+# dmz -- 非军事区
+# work -- 工作区
+# home -- 家庭网络
+# internal -- 内部网络
+# trusted -- 信任网络
 #
+# 设定默认zone
+firewall-cmd --set-default-zone=work
+# 查看指定网卡所在的zone
+firewall-cmd --get-zone-of-interface=ens33
+# 给指定网卡设置zone
+firewall-cmd --zone=dmz --add-interface=lo
+# 针对网卡更改zone
+firewall-cmd --zone=home --change-interface=lo
+# 针对网卡移除zone
+firewall-cmd --zone=home --remove-interface=lo
+# 查看所有网卡所在的zone
+firewall-cmd --get-active-zones
+# # 每个zone包含不同的service，service就是针对一个服务(端口)所做的iptables规则
+# service 配置文件 -- /usr/lib/firewalld/services <- /etc/firewalld/services
+#
+# 查看当前zone有哪些service
+firewall-cmd --list-services
+# 查看指定zone下有哪些service
+firewall-cmd --zone=public --list-services
+# 添加一个service到指定zone下(内存)
+firewall-cmd --zone=public --add-service=http
+# 添加一个service到指定zone下(永久)
+firewall-cmd --zone=public --add-service=http --permanent
+# 重新加载firewalld
+firewall-cmd --reload
+```
+
+### linux系统服务管理
+-------------------
+
+#### chkconfig
+centos6上的系统服务管理软件，centos7使用了systemd，但是也可以用chkconfig进行服务管理
+```sh
+# # chkconfig 所有注册服务配置文件
+ls /etc/init.d
+# # 列出所有服务以及每个级别的开启状态
+chkconfig --list
+# 运行级别
+# 0 --关机shutdown
+# 1 -- 重启至单用户模式
+# 2 -- 无NFS支持的多用户模式
+# 3 -- 完全功能的多用户模式
+# 4 -- 用户自定义
+# 5 -- 图形登录方式
+# 6 -- 重启
+# 指定某服务的某个级别关闭或开启
+chkconfig --level 3 mongodb off/on
+# 默认操作目标级别2/3/4/5
+chkconfig mongodb off/on
+# # 将自定义服务加入到系统服务
+chkconfig --add mongodb
+chkconfig --del mongodb
+```
+
+#### systemd服务管理
+centos7使用systemd代替chkconfig
+```sh
+# # 列出系统所有服务
+systemctl list-units --all --type=service
+# # 服务对应的脚本文件
+ls /usr/lib/systemd/system
+# # 常用操作
+systemctl enable [service-name] # 开机自启
+systemctl disable [service-name] # 禁止开机自启
+systemctl status [service-name] # 查看服务状态
+systemctl start [service-name] # 启动某个服务
+systemctl stop [service-name] # 停止某个服务
+systemctl restart [service-name] # 重启某个服务
+systemctl is-enabled [service-name] # 查看某个服务是否开机自启
+#
+# # 关于service / unit / target
+# unit类型
+# service -- 系统服务
+# target -- 多个unit组成的组合
+# device -- 硬件设备
+# mount -- 文件系统挂载点
+# automount -- 自动挂载点
+# path -- 文件或路径
+# scope -- 不是由systemd启动的外部进程
+# slice -- 进程组
+# snapshot -- systemd快照
+# socket -- 进程间通信的套接字
+# swap -- 交换文件
+# timer -- 定时器
+#  
+# # unit相关的命令
+systemctl list-units # 列出正在运行的unit
+systemctl list-units --all # 列出所有的unit
+systemctl list-units --all --state=inactive # 列出所有未激活的unit
+systemctl list-units --all --type=service # 列出所有serivce
+systemctl list-units --type=servcie # 列出所有激活的service
+systemctl is-active crond.service # 查看某个服务是否激活
+# #
 ```
