@@ -14,12 +14,20 @@ icon='icon.png'
 
 # # help info
 showUsage() {
+    echo
     echo "main: bash makeIconLink [param]"
-    echo "|___ param: [-d | --dir ] path/to/directory => target dir's absolute path [necessary]"
-    echo "|___ param: [-t | --target] targetFileName => app name in target dir [necessary]"
-    echo "|___ param: [-i | --icon] iconName => icon name in target dir [unnecessary: default -> icon.png]"
-    echo "|___ param: [-h | --help] => show help info"
-    echo "|___ param: [-u | --uninstall] [name] => uninstall the app named [name] maked by this makeIconLink script"
+    echo "|"
+    echo "|___ param*:   [-d | --dir ] path/to/directory => the target-dir's absolute path [necessary]"
+    echo "|___ param*:   [-t | --target] targetFileName => the executable-file'name in target dir [necessary]"
+    echo "|___ param*:   [-i | --icon] iconName => the icon-file'name in target dir [unnecessary: default -> icon.png]"
+    echo "|"
+    echo "|___ param:   [-h | --help] => show help info"
+    echo "|___ param:   [-u | --uninstall] [name] => uninstall the app ( appointed by param - [target] ) linked by makeIconLink"
+    echo "|"
+    echo "|___ example:  => 【 bash makeIconLink --dir /path/to/firefox --target firefox --icon firefox.png 】"
+    echo "|___ example:  => 【 bash makeIconLink --help 】"
+    echo "|___ example:  => 【 bash makeIconLink --uninstall firefox 】"
+    echo
 }
 
 # # uninstall
@@ -81,7 +89,7 @@ install() {
 
   # # 创建图标链接
   sudo chmod a+x "$directory/$lastDirName.desktop"
-  sudo ln -s "$directory/$lastDirName.desktop" /usr/share/applications/
+  sudo ln -s "$directory/$lastDirName.desktop" /usr/share/applications/ -f
 
   echo ">>> make icon link done!"
   echo ">>> set $directory/$lastDirName.desktop -> /usr/share/applications/$lastDirName.desktop"
@@ -109,6 +117,10 @@ while [ -n "$1" ]; do
     ;;
     -u | --uninstall )
       uninstall $2
+    ;;
+    * )
+      echo ">>> invalid param! script exit ... "
+      exit 1
     ;;
     esac
     shift
