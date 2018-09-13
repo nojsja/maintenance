@@ -17,12 +17,10 @@ $: bash install.sh
 3. And last step, you can use "gnome-tweak-tool" to change lockscreen-picture of your desktop, just apt-install and run it. Actually, there are two pictures when you do `bash install.sh`, you can just use that :) .
 
 #### UNINSTALL
-1. In folder
+In folder
 ```sh
 $: sudo chmod +x uninstall.sh
 $: bash uninstall.sh
 ```
-
-2. login-background and
 
 __Enjoy!__
