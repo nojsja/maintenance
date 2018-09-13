@@ -12,67 +12,106 @@ directory=''
 target=''
 icon='icon.png'
 
+# # help info
 showUsage() {
-    echo "main: bash makeIconLink"
-    echo "|___ param: -d path/to/directory | target dir's absolute path [necessary]"
-    echo "|___ param: -t targetFileName | app name in target dir [necessary]"
-    echo "|___ param: -i iconName | icon name in target dir [unnecessary]"
+    echo "main: bash makeIconLink [param]"
+    echo "|___ param: [-d | --dir ] path/to/directory => target dir's absolute path [necessary]"
+    echo "|___ param: [-t | --target] targetFileName => app name in target dir [necessary]"
+    echo "|___ param: [-i | --icon] iconName => icon name in target dir [unnecessary: default -> icon.png]"
+    echo "|___ param: [-h | --help] => show help info"
+    echo "|___ param: [-u | --uninstall] [name] => uninstall the app named [name] maked by this makeIconLink script"
+}
+
+# # uninstall
+uninstall() {
+
+  local app="$1"
+
+  if [ -z "$app" ]; then
+    echo ">>> option - uninstall missed the param [name] !"
+    exit 1
+  fi
+
+  if [ ! -e "/usr/share/applications/$app.desktop" ]; then
+    echo ">>> $app.desktop not found in /usr/share/applications/, uninstall failed!"
+    exit 1
+  fi
+
+  if [ ! -L "/usr/share/applications/$app.desktop" ]; then
+    echo ">>> /usr/share/applications/$app.desktop is not a symbolic-link, uninstall failed!"
+    exit 1
+  fi
+
+  sudo rm "/usr/share/applications/$app.desktop"
+
+  echo ">>> uninstall $app done. bye ~"
+  exit 0
+}
+
+# # install
+install() {
+  # 检测目录
+  if [ -z "$directory" -o -z "$target" ]; then
+      echo ">>> param - [d]irectory - [t]argetFileName is necessary !"
+      echo ">>> set usage with -h"
+      exit 1
+  fi
+
+  # 检测图标文件
+  if [ ! -f "$directory/$icon" ]; then
+    echo ">>> the icon file not exits!"
+    exit 1
+  fi
+
+  # # 链接文件和图标
+  local lastDirName=`echo $directory | awk -F '/' '{print $NF}'`
+
+
+  rm "$directory/$lastDirName.desktop" -f
+  touch "$directory/$lastDirName.desktop"
+  echo "[Desktop Entry]" >> "$directory/$lastDirName.desktop"
+  echo "Name=$lastDirName" >> "$directory/$lastDirName.desktop"
+  echo "Comment=$lastDirName" >> "$directory/$lastDirName.desktop"
+  echo "Exec=$directory/$target" >> "$directory/$lastDirName.desktop"
+  echo "Icon=$directory/$icon" >> "$directory/$lastDirName.desktop"
+  echo "Terminal=false" >> "$directory/$lastDirName.desktop"
+  echo "StartupNotify=true" >> "$directory/$lastDirName.desktop"
+  echo "Type=Application" >> "$directory/$lastDirName.desktop"
+  echo "Categories=Application" >> "$directory/$lastDirName.desktop"
+
+  # # 创建图标链接
+  sudo chmod a+x "$directory/$lastDirName.desktop"
+  sudo ln -s "$directory/$lastDirName.desktop" /usr/share/applications/
+
+  echo ">>> make icon link done!"
+  echo ">>> set $directory/$lastDirName.desktop -> /usr/share/applications/$lastDirName.desktop"
+  echo ">>> now check your application lists."
 }
 
 # # 载入参数
 while [ -n "$1" ]; do
     case $1 in
-    -d )
+    -d | --dir )
       directory=$2
       shift
     ;;
-    -t )
+    -t | --target )
       target=$2
       shift
     ;;
-    -i )
+    -i | --icon )
       icon=$2
       shift
     ;;
-    -h )
+    -h | --help )
       showUsage
       exit 0
+    ;;
+    -u | --uninstall )
+      uninstall $2
     ;;
     esac
     shift
 done
 
-# 检测目录
-if [ -z "$directory" -o -z "$target" ]; then
-    echo ">>> param - [d]irectory - [t]argetFileName is necessary !"
-    echo ">>> set usage with -h"
-    exit 1
-fi
-
-# 检测图标文件
-if [ ! -f "$directory/$icon" ]; then
-  echo ">>> the icon file not exits!"
-  exit 1
-fi
-
-# # 链接文件和图标
-lastDirName=`echo $directory | awk -F '/' '{print $NF}'`
-rm "$directory/$lastDirName.desktop" -f
-touch "$directory/$lastDirName.desktop"
-echo "[Desktop Entry]" >> "$directory/$lastDirName.desktop"
-echo "Name=$lastDirName" >> "$directory/$lastDirName.desktop"
-echo "Comment=$lastDirName" >> "$directory/$lastDirName.desktop"
-echo "Exec=$directory/$target" >> "$directory/$lastDirName.desktop"
-echo "Icon=$directory/$icon" >> "$directory/$lastDirName.desktop"
-echo "Terminal=false" >> "$directory/$lastDirName.desktop"
-echo "StartupNotify=true" >> "$directory/$lastDirName.desktop"
-echo "Type=Application" >> "$directory/$lastDirName.desktop"
-echo "Categories=Application" >> "$directory/$lastDirName.desktop"
-
-# # 创建图标链接
-sudo chmod a+x "$directory/$lastDirName.desktop"
-sudo ln -s "$directory/$lastDirName.desktop" /usr/share/applications/
-
-echo ">>> make icon link done!"
-echo ">>> set $directory/$lastDirName.desktop -> /usr/share/applications/$lastDirName.desktop"
-echo ">>> now check your application lists."
+install
