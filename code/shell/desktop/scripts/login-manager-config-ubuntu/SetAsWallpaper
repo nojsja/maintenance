@@ -1,0 +1,20 @@
+#!/bin/bash
+
+location=`pwd`
+whoami=`whoami`
+
+# Set As Wallpaper
+gsettings set org.gnome.desktop.background picture-uri file:///$location/$1
+
+sleep 1
+
+# Make your wallpaper blurry
+mkdir /home/$whoami/Pictures -p
+convert -blur 5x5 ~/.cache/wallpaper/* ~/Pictures/gdmlock.jpg
+
+sleep 1
+
+# Copy wallpaper in system directory for gdm3 lockscreen
+pkexec cp -f /home/$whoami/Pictures/gdmlock.jpg /usr/share/backgrounds/
+
+# Enjoy!
