@@ -110,6 +110,9 @@ initRsync() {
   # 创建数据库备份目录
   mkdir -p /root/mongodb
 
+  # 启动rsync
+  start
+
   echo ">>> rsync init done !"
 }
 

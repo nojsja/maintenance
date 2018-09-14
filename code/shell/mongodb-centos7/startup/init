@@ -55,7 +55,7 @@ chkconfig mongodb on
 echo '>>> now start mongodb.service ... '
 bash "mongodb" --start
 echo ">>> now set mongodb-backup crontab service ... "
-bash "mongodb" --crontab -t "10.0.6.231"
+bash "mongodb" --crontab -t "10.0.6.200"
 
 # # yapi ---------------------------
 echo '>>> now install yapi.package'
