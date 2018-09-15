@@ -11,6 +11,7 @@
 directory=''
 target=''
 icon='icon.png'
+name=''
 
 # # help info
 showUsage() {
@@ -20,6 +21,7 @@ showUsage() {
     echo "|___ param*:   [-d | --dir ] path/to/directory => the target-dir's absolute path [necessary]"
     echo "|___ param*:   [-t | --target] targetFileName => the executable-file'name in target dir [necessary]"
     echo "|___ param*:   [-i | --icon] iconName => the icon-file'name in target dir [unnecessary: default -> icon.png]"
+    echo "|___ param*:   [-n | --name] appName => use the given app name [unnecessary: default -> dirName]"
     echo "|"
     echo "|___ param:   [-h | --help] => show help info"
     echo "|___ param:   [-u | --uninstall] [name] => uninstall the app ( appointed by param - [target] ) linked by makeIconLink"
@@ -73,7 +75,7 @@ install() {
 
   # # 链接文件和图标
   local lastDirName=`echo $directory | awk -F '/' '{print $NF}'`
-
+  [ -n "$name" ] && lastDirName="$name"
 
   rm "$directory/$lastDirName.desktop" -f
   touch "$directory/$lastDirName.desktop"
@@ -109,6 +111,10 @@ while [ -n "$1" ]; do
     ;;
     -i | --icon )
       icon=$2
+      shift
+    ;;
+    -n | --name )
+      name=$2
       shift
     ;;
     -h | --help )
