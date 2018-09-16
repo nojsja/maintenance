@@ -5,23 +5,34 @@
 
 # # 变量读取
 # var -- MongodbDir
-for var in `cat /etc/frontend`; do
-  a=`echo $var | awk -F '=' '{print $1}'`
-  b=`echo $var | awk -F '=' '{print $2}'`
-  export $a=$b
-done
-if [ -z $MongodbPath ] ; then
-  echo ">>> You need to exec init.sh first ... "
-  echo ">>> now exit ..."
-  exit 0
-fi
+readVar() {
+  for var in `cat /etc/frontend`; do
+    a=`echo $var | awk -F '=' '{print $1}'`
+    b=`echo $var | awk -F '=' '{print $2}'`
+    export $a=$b
+  done
+}
 
-# # 变量声明
-whoami=`whoami`
-dbpath="$MongodbPath/data"
-dblogpath="$MongodbPath/logs"
-dbhost='0.0.0.0'
-port=27017
+# # 变量检查
+checkVar() {
+  if [ -z "$MongodbPath" ] ; then
+    readVar
+  fi
+
+  if [ -z "$MongodbPath" ] ; then
+    echo ">>> You need to exec init.sh first ... "
+    echo ">>> now exit ..."
+    exit 0
+  else
+    # # 变量声明
+    whoami=`whoami`
+    dbpath="$MongodbPath/data"
+    dblogpath="$MongodbPath/logs"
+    dbhost='0.0.0.0'
+    port=27017
+  fi
+}
+
 
 # # Function
 
@@ -318,31 +329,38 @@ showUsage() {
 case $1 in
 
   --start | start )
+    checkVar
     start
   ;;
 
   --stop | stop )
+    checkVar
     stop
   ;;
 
   --restart | restart )
+    checkVar
     restart
   ;;
 
   --clean | clean )
+    checkVar
     clean
   ;;
 
   --clean-remote | -cr )
+    checkVar
     shift
     cleanRemoteBackup $@
   ;;
 
   --backup | backup)
+    checkVar
     backup $2
   ;;
 
   --restore | restore )
+    checkVar
     shift
     restore $@
   ;;
@@ -352,11 +370,13 @@ case $1 in
   ;;
 
   --crontab )
+    checkVar
     shift
     setCronTab $@
   ;;
 
   --drontab )
+    checkVar
     disableCronTab
   ;;
 

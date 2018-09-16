@@ -673,5 +673,40 @@ systemctl list-units --all --state=inactive # 列出所有未激活的unit
 systemctl list-units --all --type=service # 列出所有serivce
 systemctl list-units --type=servcie # 列出所有激活的service
 systemctl is-active crond.service # 查看某个服务是否激活
-# #
+# # target
+systemctl list-unit-files --type=target # 列出所有target
+systemctl list-dependencies multi-user.target # 列出target的所有依赖
+systemctl get-default # 查看系统的默认target
+systemctl set-default multi-user.target # 设置系统默认的target
+# # target/unit/service关系
+# service属于一种unit
+# 多个unit组成target
+# 一个target包含多个service
 ```
+
+#### 数据备份工具rsync
+>remote sync 可以同步本地数据和远程数据，它不会覆盖已有的数据，而是先判断目标目录的数据和新数据的差异，只有数据不同的时候才会把不相同的部分覆盖。  
+
+命令格式:   
+ * rsync [OPTION] SRC DST  
+ * rsync [OPTION] SRC [USER@]HOST:DST  
+ * rsync [OPTION] [USER@]HOST:SRC DEST  
+ * rsync [OPTION] SRC [USER@]HOST::DST  
+ * rsync [OPTION] [USER@]HOST::SRC DEST  
+
+选项说明：  
+* -a => 归档模式，以递归方式传输文件并保留属性，相当于 -rlptgoD，可以跟一个--no-[OPTION]来动态生成参数，比如-a--no-l 等同于 -rptgoD。  
+* -r => 递归处理目录
+* -v => 打印信息
+* -l => 保留软链接
+* -L => 根据链接来传输源文件
+* -p => 保留文件权限
+* -o => 保留属主信息
+* -g => 保留组信息
+* -D => 保留设备文件信息
+* -t => 保留时间信息
+* --delete => 删除DST中SRC没有的文件
+* --exclude=[PATTERN] => 排除文件
+* --progress => 显示进度信息
+* -u => 不覆盖DST中较新的文件
+* -z => 传输过程中压缩
