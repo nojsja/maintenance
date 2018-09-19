@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# # 从本地文件添加更新
+updateOnlineAndLocal() {
+  genpac --proxy="SOCKS5 127.0.0.1:1080" \
+    --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
+    -o autoproxy.pac \
+    --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt" \
+    --gfwlist-local="./local-rules" \
+    --gfwlist-update-local
+}
+
+# # 在线更新
+updateOnline() {
+  genpac --proxy="SOCKS5 127.0.0.1:1080" \
+    --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
+    -o autoproxy.pac \
+    --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
+}
+
+# # 从本地恢复
+appendFromLocal() {
+  genpac --proxy="SOCKS5 127.0.0.1:1080" \
+    --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
+    -o autoproxy.pac \
+    --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt" \
+    --user-rule-from './user-rules.txt'
+}
+
+# # 显示帮助信息
+showUsage() {
+  echo
+  echo "description: shadowsocks pac file generate. "
+  echo "main: bash genpac-command [--param] "
+  echo " |____ param: --update-online => update autoproxy.pac file online"
+  echo " |____ param: --update-local => update autoproxy.pac file online and sync to local file local-rules"
+  echo " |____ param: --build-local => update autoproxy.pac file from both online and local file user-rules.txt"
+  echo
+  echo " |____ example: bash genpac-command --update-online"
+  echo " |____ example: bash genpac-command --update-local"
+  echo " |____ example: bash genpac-command --build-local"
+  echo
+}
+
+while [ -n "$1" ]; do
+
+  case "$1" in
+    --update-online )
+      updateOnline
+    ;;
+    --update-local )
+      updateOnlineAndLocal
+    ;;
+    --build-local )
+      appendFromLocal
+    ;;
+    --help | -h )
+      showUsage
+    ;;
+  esac
+  shift
+done
