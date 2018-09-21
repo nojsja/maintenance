@@ -1,0 +1,11 @@
+[Unit]
+Description=Shadowsocks Service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/nojsja/github/maintenance/code/shell/desktop/startup.sh start
+ExecStop=/bin/bash /home/nojsja/github/maintenance/code/shell/desktop/startup.sh start
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
