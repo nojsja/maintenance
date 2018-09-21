@@ -261,6 +261,51 @@ lvcreate -l 100 -n test_lv2 test_vg2  # 提取100个pe的大小
 lvcreate -L 2G -n test_lv3 test_vg1 /dev/sdb6 # 指定物理卷提取
 ```
 
+#### 网络配置
+
+```sh
+# # 网络接口参数
+ifconfig interface 选项 | 地址
+# 配置网卡地址和子网掩码
+ifconfig en0s3 10.0.6.231 netmask 255.255.255.0
+# 查看网卡信息
+ifconfig en0s3
+# 关闭网卡
+ifconfig en0s3 down
+# 开启网卡
+ifconfig en0s3 up
+# # 主机名
+hostnamectl status
+hostnamectl set-hostname nojsja
+# # route 显示或设置静态IP路由表
+route [选项] # 查看路由信息
+route add [ip] gw [gateway] # 添加路由表记录
+route # 删除路由表记录
+# 添加默认网关为10.0.6.1
+route add(del) default gw 10.0.6.1
+# 添加指定网段的网关
+route add(del) -net 172.16.0.0/16 gw 10.0.6.1
+# 指定通过网卡传输到192.56.76.0网段的数据
+route add(del) -net 192.56.76.0 netmask 255.255.255.0 dev en0s3
+```
+
+#### 内核模块
+```sh
+# # 内核存放位置
+uname -r # 当前内核
+ls /lib/modules/`uname -r`
+# # 内核模块
+lsmod # 查看内核模块
+modprobe ip_vs # 动态加载内核模块
+modprobe -r ip_vs # 动态卸载内核模块
+modinfo ip_vs # 查看内核模块信息
+# # 动态修改内核参数
+echo "1" > /proc/sys/net/ipv4/ip_forward # 开启内核路由转发功能
+echo "1" > /proc/sys/net/ipv4/icmp_echo_ignore_all # 禁止所有的icmp回包(禁止其它主机的ping功能)
+echo "108248" > /proc/sys/fs/file-max # 调整所有进程可以打开的文件总数量
+```
+
+
 ### 自动化运维
 ____________
 
