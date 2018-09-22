@@ -4,7 +4,7 @@ Description=Shadowsocks Service
 [Service]
 Type=oneshot
 ExecStart=/bin/bash /home/nojsja/github/maintenance/code/shell/desktop/startup.sh start
-ExecStop=/bin/bash /home/nojsja/github/maintenance/code/shell/desktop/startup.sh start
+ExecStop=/bin/bash /home/nojsja/github/maintenance/code/shell/desktop/startup.sh stop
 RemainAfterExit=yes
 
 [Install]

@@ -5,7 +5,7 @@
 
 start() {
   # # Shadowsocks
-  shadowPath=/home/nojsja/github/maintenance/code/shell/desktop
+  shadowPath=/home/nojsja/github/maintenance/code/shell/desktop/shadowsocks
   shadowConfig=$shadowPath/shadowsocks.json
 
   rm $shadowPath/nohup.out -f
