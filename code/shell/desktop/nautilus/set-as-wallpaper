@@ -3,6 +3,25 @@
 location=`pwd`
 whoami=`whoami`
 
+fileName="$1"
+fileType="${fileName##*.}"
+imageType=('jpg' 'png' 'jpeg')
+
+inArray() {
+  local array="$1"
+  local key="$2"
+  local booln=`echo ${array[@]} | grep -wq "$key" && echo 1 || echo 0`
+  return $booln
+}
+
+# extentions: ${file##*.}”
+# filename: ${file%.*}
+inArray $imageType $fileType
+if [ "$?" == "0" ]; then
+  notify-send "set-as-wallpaper: need a image file!"
+  exit 1
+fi
+
 # Set As Wallpaper
 gsettings set org.gnome.desktop.background picture-uri file:///$location/$1
 
