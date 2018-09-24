@@ -1,0 +1,6 @@
+#!/bin/sh
+location=`pwd`
+whoami=`whoami`
+
+# open-in-terminal
+/usr/bin/xfce4-terminal --working-directory="$location"
