@@ -1,7 +1,7 @@
 /**
  * genpac 2.0.1 https://github.com/JinnLynn/genpac
- * Generated: 2018-09-19 18:12:09
- * GFWList Last-Modified: 2018-08-13 08:45:03
+ * Generated: 2018-09-26 16:38:41
+ * GFWList Last-Modified: 2018-09-23 05:21:47
  * GFWList From: online[https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt]
  */
 
@@ -10,7 +10,9 @@ var rules = [
     [
         [],
         [
-            "ipip.net"
+            "atom.io",
+            "ipip.net",
+            "opendesktop.org"
         ]
     ],
     [
@@ -227,6 +229,7 @@ var rules = [
             "a5.com.ru",
             "aamacau.com",
             "abc.com",
+            "abc.net.au",
             "abc.xyz",
             "abchinese.com",
             "abclite.net",
@@ -1532,8 +1535,10 @@ var rules = [
             "faydao.com",
             "fb.com",
             "fb.me",
+            "fbaddins.com",
             "fbcdn.net",
             "fbsbx.com",
+            "fbworkmail.com",
             "fc2.com",
             "fc2blog.net",
             "fc2china.com",
@@ -2612,6 +2617,7 @@ var rules = [
             "jandyx.com",
             "janwongphoto.com",
             "japan-whores.com",
+            "japantimes.co.jp",
             "jav.com",
             "jav101.com",
             "jav2be.com",
@@ -3980,6 +3986,7 @@ var rules = [
             "secretgarden.no",
             "secretsline.biz",
             "securetunnel.com",
+            "securityinabox.org",
             "securitykiss.com",
             "seed4.me",
             "seehua.com",
@@ -4293,6 +4300,7 @@ var rules = [
             "sunta.com.tw",
             "sunvpn.net",
             "suoluo.org",
+            "supchina.com",
             "superfreevpn.com",
             "superokayama.com",
             "superpages.com",
@@ -4759,6 +4767,7 @@ var rules = [
             "twit2d.com",
             "twitbrowser.net",
             "twitcause.com",
+            "twitch.tv",
             "twitgether.com",
             "twitgoo.com",
             "twitiq.com",

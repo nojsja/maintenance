@@ -1,25 +1,60 @@
 #!/bin/bash
 
-# # 从本地文件添加更新
-updateOnlineAndLocal() {
+# # 刷新网络
+freshNet() {
+  echo ">>> now restart network-manager ... "
+  systemctl restart NetworkManager
+}
+
+# # 在线更新pac文件和local-rules
+updateOnline() {
+  echo ">>> upate autoproxy.pac file ... "
   genpac --proxy="SOCKS5 127.0.0.1:1080" \
     --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
     -o autoproxy.pac \
     --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt" \
     --gfwlist-local="./local-rules" \
     --gfwlist-update-local
+
+  freshNet
 }
 
-# # 在线更新
-updateOnline() {
-  genpac --proxy="SOCKS5 127.0.0.1:1080" \
-    --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
-    -o autoproxy.pac \
-    --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
+# # 新增本地 user rule
+addUserRule() {
+  local rules=("$@")
+  if [ -n "$rules" ]; then
+    echo ">>> add new rule: ${rules[@]}"
+    for rule in ${rules[@]}; do
+      sed -i "/||$rule/d" ./user-rules.txt
+      echo "||$rule" >> ./user-rules.txt
+    done
+    updateFromLocal
+    freshNet
+    echo ">>> done."
+  else
+    echo ">>> need param [domain] !  see help info with [--help]"
+  fi
+}
+
+# # 删除本地 user rule
+delUserRule() {
+  local rules=("$@")
+  if [ -n "$rules" ]; then
+    echo ">>> delete rule: ${rules[@]}"
+    for rule in ${rules[@]}; do
+      sed -i "/||$rule/d" ./user-rules.txt
+    done
+    updateFromLocal
+    freshNet
+    echo ">>> done."
+  else
+    echo ">>> need param [domain] !  see help info with [--help]"
+  fi
 }
 
 # # 从本地恢复
-appendFromLocal() {
+updateFromLocal() {
+  echo ">>> update autoproxy.pac file from remote and local ... "
   genpac --proxy="SOCKS5 127.0.0.1:1080" \
     --gfwlist-proxy="SOCKS5 127.0.0.1:1080" \
     -o autoproxy.pac \
@@ -30,15 +65,20 @@ appendFromLocal() {
 # # 显示帮助信息
 showUsage() {
   echo
-  echo "description: shadowsocks pac file generate. "
+  echo "description: shadowsocks pac file generate & configure "
   echo "main: bash genpac-command [--param] "
+  echo " |"
   echo " |____ param: --update-online => update autoproxy.pac file online"
   echo " |____ param: --update-local => update autoproxy.pac file online and sync to local file local-rules"
-  echo " |____ param: --build-local => update autoproxy.pac file from both online and local file user-rules.txt"
+  echo " |____ param: --add-rules [domain] => add new user-rules(e.p -> baidu.com) to user-rules.txt and update autoproxy.pac"
+  echo " |____ param: --del-rules [domain] => delete user-rules(e.p -> baidu.com) from user-rules.txt and update autoproxy.pac"
   echo
   echo " |____ example: bash genpac-command --update-online"
   echo " |____ example: bash genpac-command --update-local"
-  echo " |____ example: bash genpac-command --build-local"
+  echo " |____ example: bash genpac-command --add-rules opendesktop.org"
+  echo " |____ example: bash genpac-command --add-rules opendesktop.org atom.io"
+  echo " |____ example: bash genpac-command --del-rules opendesktop.org"
+  echo " |____ example: bash genpac-command --del-rules opendesktop.org atom.io"
   echo
 }
 
@@ -49,10 +89,15 @@ while [ -n "$1" ]; do
       updateOnline
     ;;
     --update-local )
-      updateOnlineAndLocal
+      updateFromLocal
     ;;
-    --build-local )
-      appendFromLocal
+    --add-rules )
+      shift
+      addUserRule $@
+    ;;
+    --del-rules )
+      shift
+      delUserRule $@
     ;;
     --help | -h )
       showUsage
