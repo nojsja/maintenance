@@ -1,6 +1,6 @@
 /**
  * genpac 2.0.1 https://github.com/JinnLynn/genpac
- * Generated: 2018-09-26 16:38:41
+ * Generated: 2018-11-02 10:47:07
  * GFWList Last-Modified: 2018-09-23 05:21:47
  * GFWList From: online[https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt]
  */
@@ -11,8 +11,14 @@ var rules = [
         [],
         [
             "atom.io",
+            "flaticon.com",
+            "fontawesome.com",
+            "iconverticons.com",
             "ipip.net",
-            "opendesktop.org"
+            "mobx.js.org",
+            "mozilla.org",
+            "vivaldi.com",
+            "vivaldi.net"
         ]
     ],
     [

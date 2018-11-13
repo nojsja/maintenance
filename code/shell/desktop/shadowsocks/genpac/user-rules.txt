@@ -1,3 +1,9 @@
 ||ipip.net
+||flaticon.com
+||mobx.js.org
+||fontawesome.com
 ||atom.io
-||opendesktop.org
+||vivaldi.net
+||vivaldi.com
+||iconverticons.com
+||developer.mozilla.org
