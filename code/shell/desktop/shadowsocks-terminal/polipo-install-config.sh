@@ -39,7 +39,8 @@ setProxyAlias() {
   if [[ $shellFile == $givenShellFile ]]; then
     echo ">>> source $sourceFile"
     echo ">>> please input $whoami's password to update $sourceFile ->"
-    su - $whoami -c "source $sourceFile"
+    #su - $whoami -c "source $sourceFile"
+    source $sourceFile
   fi
 }
 
@@ -50,8 +51,8 @@ for one in ${allSource[@]}; do
 done
 
 # guide info
-echo ">>> succeed!"
-echo ">>> now try the follow commands to run a test: "
+echo ">>> succeed! please restart the terminal first."
+echo ">>> then try the follow commands to run a test: "
 echo ">>>   tips: 'hp' == 'http_proxy=http://localhost:8123' for any command."
 echo ">>>   tips: 'gp' == 'http.proxy=localhost:8123' for git proxy config."
 echo ">>>   [command1] hp curl ip.gs"
