@@ -5,8 +5,8 @@ webpath=""
 dirname="`pwd`"
 VERSION="1.0.0"
 DATE="$(date +%F)"
-INSTALL_PATH="allweb-${VERSION}"
-BUILD_PATH="/root/${INSTALL_PATH}"
+RELEASE_NAME="allweb-${VERSION}"
+BUNDLE_PATH="/root/${RELEASE_NAME}"
 
 # --- warning / success
 function fLog(){
@@ -25,30 +25,30 @@ function clean() {
 
 # --- be prepared for rpm build
 function configure() {
-  mkdir -p "allweb-${VERSION}"
+  mkdir -p "${BUNDLE_PATH}"
   mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
   # Makefile
-  cp ./Makefile ./"allweb-${VERSION}" -f
+  cp ./Makefile "${BUNDLE_PATH}" -f
 
   # allweb
   fLog 0 ">>> copy  file : [$webpath/node-express-react]"
-  cp $webpath/node-express-react ./"allweb-${VERSION}" -rf
+  cp $webpath/node-express-react "${BUNDLE_PATH}" -rf
   fLog 0 ">>> copy  file : [$webpath/web]"
-  cp $webpath/web ./"allweb-${VERSION}" -rf
-  #
+  cp $webpath/web "${BUNDLE_PATH}" -rf
+  # update web-dist files
   # cp ./"allweb-${VERSION}"/web/dist ./"allweb-${VERSION}"/node-express-react/public/ -rf
 
   # mongodb
   fLog 0 ">>> copy  file : [mongodb-linux-x86_64-rhel70-3.6.4]"
-  tar -xf mongodb-linux-x86_64-rhel70-3.6.4.tar.gz -C ./"allweb-${VERSION}"
+  tar -xf mongodb-linux-x86_64-rhel70-3.6.4.tar.gz -C "${BUNDLE_PATH}"
   # node
   fLog 0 ">>> copy  file : [node-v8.11.1-linux-x64]"
-  tar -xf node-v8.11.1-linux-x64.tar.gz -C ./"allweb-${VERSION}"
+  tar -xf node-v8.11.1-linux-x64.tar.gz -C "${BUNDLE_PATH}"
 
   # tar
-  fLog 0 ">>> build file : [allweb-${VERSION}.tar.gz]"
-  tar -czf ~/rpmbuild/SOURCES/"allweb-${VERSION}.tar.gz" "allweb-${VERSION}"
+  fLog 0 ">>> build file : [${RELEASE_NAME}.tar.gz]"
+  tar -czf ~/rpmbuild/SOURCES/"${RELEASE_NAME}.tar.gz" -C /root "${RELEASE_NAME}"
 }
 
 # --- build rpm

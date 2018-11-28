@@ -1,4 +1,7 @@
 %{!?prefix: %global prefix /opt/allweb}
+
+%define localbin    /usr/local/bin
+
 Name:           allweb
 Version:        1.0.0
 Release:        1.el7
@@ -28,10 +31,6 @@ all frontend code
 # ------------ INSTALL -------------
 
 %install
-# -- pre-step before install
-mkdir -p %{buildroot}/opt/allweb
-mkdir -p %{buildroot}/etc/init.d/
-
 # -- install (just copy file)
 make install DESTDIR=%{buildroot}
 
@@ -46,8 +45,8 @@ source /etc/profile
 
 # -- symbolic links
 echo '>>> create symbolic links for mongodb and node ... '
-sudo ln -s /opt/allweb/mongodb-linux-x86_64-rhel70-3.6.4/* /usr/bin -f
-sudo ln -s /opt/allweb/node-v8.11.1-linux-x64/bin/* /usr/bin -f
+sudo ln -s /opt/allweb/mongodb-linux-x86_64-rhel70-3.6.4/* %{localbin} -f
+sudo ln -s /opt/allweb/node-v8.11.1-linux-x64/bin/* %{localbin} -f
 
 # -- add chkconfig startup service
 echo '>>> add chkconfig startup service ... '
@@ -85,6 +84,9 @@ rm /opt/allweb -rf
 # -- unset env vir
 echo '>>> unset allweb env variable ... '
 sed '/export FrontEndDir=/'d /etc/profile -i
+sudo rm %{localbin}/mongo* %{localbin}/bsondump %{localbin}/install_compass -f
+sudo rm %{localbin}/pm2* %{localbin}/node %{localbin}/npm %{localbin}/npx -f
+
 echo
 echo ">>> ------- allweb uninstall success ! ------- <<<"
 echo

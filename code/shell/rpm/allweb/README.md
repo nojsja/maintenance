@@ -6,6 +6,7 @@ allweb build-essential, to tar [__node-express-react__] + [__web__] + [__mongodb
 1. the default build-dist directory is `~/rpmbuild`
 3. the rpm-package(need to install) is `~/rpmbuild/RPMS/x86_64/allweb-[version].x86_64.rpm`
 4. the source-package is `~/rpmbuild/SRPMS/allweb-[version].src.rpm`
+5. GNU Make >= 3.82
 
 #### files
 * [file] -- __allweb.spec__ => _rpmbuild rule file_
@@ -33,7 +34,7 @@ $: bash build --webpath [path/to/allweb]
 #  |-- tips >> run `sudo chmod +x install` when exec this script for the first time.
 $: bash install
 #  |-- or you can also run rpm command, it's same to `bash install`
-$: rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --force --nodeps
+$: rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --nodeps
 ```
 
 3. uninstall
