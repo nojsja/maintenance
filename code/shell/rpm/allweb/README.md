@@ -2,6 +2,9 @@
 ---------
 allweb build-essential, to tar [__node-express-react__] + [__web__] + [__mongodb__] + [__node__] into a single bundle package.
 
+#### env
+* install rpmbuild tools => `yum install rpm-build`
+
 #### instructions
 1. the default build-dist directory is `~/rpmbuild`
 3. the rpm-package(need to install) is `~/rpmbuild/RPMS/x86_64/allweb-[version].x86_64.rpm`
@@ -44,7 +47,7 @@ $: rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --nodeps
 $: bash uninstall
 #  |-- or you can also run rpm command, it's same to `bash uninstall`
 #  [01]check installed allweb-[version] package info
-$: rpm -q allweb*
+$: rpm -q allweb-*
 #  [02]uninstall allweb-[version]
 $: rpm -evh allweb-1.0.0
 ```

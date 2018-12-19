@@ -21,6 +21,7 @@ function fLog(){
 # --- clean build dir
 function clean() {
   rm ~/rpmbuild/BUILD/* -rf
+  rm ${BUNDLE_PATH} -rf
 }
 
 # --- be prepared for rpm build
@@ -29,22 +30,28 @@ function configure() {
   mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
   # Makefile
-  cp ./Makefile "${BUNDLE_PATH}" -f
+  cp ./conf/Makefile "${BUNDLE_PATH}" -f
 
   # allweb
   fLog 0 ">>> copy  file : [$webpath/node-express-react]"
-  cp $webpath/node-express-react "${BUNDLE_PATH}" -rf
+  npm run gulp-clean
+  cp $webpath/node-express-react "./origin" -rf
+  # gulp workflow
+  npm run gulp-build
+  # copy
+  cp ./origin/node-express-react "${BUNDLE_PATH}" -rf
+
   fLog 0 ">>> copy  file : [$webpath/web]"
   cp $webpath/web "${BUNDLE_PATH}" -rf
   # update web-dist files
-  # cp ./"allweb-${VERSION}"/web/dist ./"allweb-${VERSION}"/node-express-react/public/ -rf
+  cp $webpath/web/dist ${BUNDLE_PATH}/node-express-react/public/ -rf
 
   # mongodb
   fLog 0 ">>> copy  file : [mongodb-linux-x86_64-rhel70-3.6.4]"
-  tar -xf mongodb-linux-x86_64-rhel70-3.6.4.tar.gz -C "${BUNDLE_PATH}"
+  tar -xf ./resources/mongodb-linux-x86_64-rhel70-3.6.4.tar.gz -C "${BUNDLE_PATH}"
   # node
   fLog 0 ">>> copy  file : [node-v8.11.1-linux-x64]"
-  tar -xf node-v8.11.1-linux-x64.tar.gz -C "${BUNDLE_PATH}"
+  tar -xf ./resources/node-v8.11.1-linux-x64.tar.gz -C "${BUNDLE_PATH}"
 
   # tar
   fLog 0 ">>> build file : [${RELEASE_NAME}.tar.gz]"

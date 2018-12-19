@@ -1,0 +1,29 @@
+{
+  "name": "gulp-workflow",
+  "version": "1.0.0",
+  "description": "gulp workflow for frontend building.",
+  "main": "build",
+  "scripts": {
+    "gulp-clean": "rm origin/* -rf",
+    "gulp-build": "gulp build"
+  },
+  "keywords": [
+    "gulp"
+  ],
+  "author": "NoJsJa",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.2.0",
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/polyfill": "^7.0.0",
+    "@babel/preset-env": "^7.2.0",
+    "@babel/register": "^7.0.0",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-cli": "^2.0.1",
+    "gulp-uglify": "^3.0.1",
+    "run-sequence": "^2.2.1"
+  },
+  "dependencies": {}
+}
