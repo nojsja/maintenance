@@ -1,15 +1,18 @@
 ### allweb
 ---------
-allweb build-essential, to tar [__node-express-react__] + [__web__] + [__mongodb__] + [__node__] into a single bundle package.
+allweb build-essential, to build [__node-express-react__] + [__web__] + [__mongodb__] + [__node__] into a single bundle package.
 
-#### env
+#### env prepare
 * install rpmbuild tools => `yum install rpm-build`
+* node@^8.14.1 | npm@^6.4.1 => you can use nvm to manage node version.
+* GNU Make >= 3.82 => `yum install make`
+* gcc => `yum install gcc`
 
 #### instructions
 1. the default build-dist directory is `~/rpmbuild`
-3. the rpm-package(need to install) is `~/rpmbuild/RPMS/x86_64/allweb-[version].x86_64.rpm`
+2. the allweb unpack resources is `~/allweb-[version]`
+3. __the rpm package(which need to install) is `~/rpmbuild/RPMS/x86_64/allweb-[version].x86_64.rpm`__
 4. the source-package is `~/rpmbuild/SRPMS/allweb-[version].src.rpm`
-5. GNU Make >= 3.82
 
 #### files
 * [file] -- __allweb.spec__ => _rpmbuild rule file_
@@ -33,19 +36,19 @@ $: bash build --webpath [path/to/allweb]
 
 2. install
 ```bash
-# run install script
+# method 1: run install script (not recommended, because the version number change sometimes.)
 #  |-- tips >> run `sudo chmod +x install` when exec this script for the first time.
 $: bash install
-#  |-- or you can also run rpm command, it's same to `bash install`
-$: rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --nodeps
+# method 2: directly run rpm install command(recommended), same to `bash install`
+$: rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --nodeps --force
 ```
 
 3. uninstall
 ```bash
-# run uninstall script
+# method 1: run uninstall script (not recommended, because the version number change sometimes.)
 #  |-- tips >> run `sudo chmod +x uninstall` when exec this script for the first time.
 $: bash uninstall
-#  |-- or you can also run rpm command, it's same to `bash uninstall`
+# method 2: directly run rpm uninstall command(recommended), same to `bash uninstall`
 #  [01]check installed allweb-[version] package info
 $: rpm -q allweb-*
 #  [02]uninstall allweb-[version]

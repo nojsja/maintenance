@@ -12,9 +12,13 @@ BUNDLE_PATH="/root/${RELEASE_NAME}"
 function fLog(){
   if [ "${1}" -ne 0 ]
   then
+    echo
     printf "\033[1;31m%b\033[0m" " ${2} \n"
+    echo
   else
+    echo
     printf "\033[1;32m%b\033[0m" "${2} \n"
+    echo
   fi
 }
 
@@ -33,6 +37,9 @@ function configure() {
   cp ./conf/Makefile "${BUNDLE_PATH}" -f
 
   # allweb
+  fLog 0 ">>> update allweb and run npm install : [$webpath/node-express-react]"
+  cd $webpath/node-express-react && git reset --hard HEAD && git pull && npm install && cd -
+
   fLog 0 ">>> copy  file : [$webpath/node-express-react]"
   npm run gulp-clean
   cp $webpath/node-express-react "./origin" -rf
@@ -61,12 +68,12 @@ function configure() {
 # --- build rpm
 function build() {
   fLog 0 ">>> run rpmbuild ... "
-  rpmbuild -ba allweb.spec
+  rpmbuild -ba ./conf/allweb.spec
 }
 
 # --- help info
 # # 显示帮助信息
-showUsage() {
+function showUsage() {
   echo
   echo "description: build rpm package for allweb."
   echo "command: bash build [--param] "
@@ -81,7 +88,7 @@ showUsage() {
 }
 
 # --- MAIN ---
-Main() {
+function Main() {
   while [ -n "$1" ]; do
     case "$1" in
       --help | -h )
