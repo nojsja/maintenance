@@ -1,16 +1,19 @@
 %{!?prefix: %global prefix /opt/allweb}
 
 %define localbin    /usr/local/bin
+%define name    allweb
+%define _version    1.0.0
+%define _release    1001
 
-Name:           allweb
-Version:        1.0.0
-Release:        1.el7
+Name:           %{name}
+Version:        %{_version}
+Release:        %{_release}.el7
 Summary:        all frontend code
 Group:          System Environment/Daemons
 License:        Commercial
 URL:            http://www.datatom.com
 Vendor:         Datatom Co.,Ltd.(Build %{git_commit_hash})
-Source:         allweb-1.0.0.tar.gz
+Source:         %{name}-%{_version}.tar.gz
 
 BuildRequires:	gcc
 Requires:       systemd,chkconfig,firewalld
