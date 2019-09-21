@@ -3,6 +3,12 @@
 location=`pwd`
 whoami=`whoami`
 
+# check file
+if [ -d $location/$1 ]; then
+ notify-send "Warning" "You select a directory, Cancelled." -u normal
+ exit
+fi
+
 mkdir ~/Pictures/ -p
 
 # Set As Wallpaper
