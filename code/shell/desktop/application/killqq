@@ -2,5 +2,8 @@
 
 # 按顺序依次kill Q宠 、 QQ主进程、QQ保护，不然重启QQ会报错
 for pnumber in `pgrep QQPet` `pgrep QQ.exe` `pgrep QQApp.exe` `pgrep QQProtect`; do
-  kill -9 $pnumber
+  if [ -n $pnumber ]
+  then
+    kill -9 $pnumber
+  fi
 done

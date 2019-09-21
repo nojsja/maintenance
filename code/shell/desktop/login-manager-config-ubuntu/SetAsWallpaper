@@ -3,6 +3,8 @@
 location=`pwd`
 whoami=`whoami`
 
+mkdir ~/Pictures/ -p
+
 # Set As Wallpaper
 gsettings set org.gnome.desktop.background picture-uri file:///$location/$1
 
@@ -10,7 +12,7 @@ sleep 1
 
 # Make your wallpaper blurry
 mkdir /home/$whoami/Pictures -p
-convert -blur 5x5 ~/.cache/wallpaper/* ~/Pictures/gdmlock.jpg
+convert -blur 5x5 $location/$1 ~/Pictures/gdmlock.jpg
 
 sleep 1
 
