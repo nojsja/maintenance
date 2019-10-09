@@ -18,7 +18,7 @@ sleep 1
 
 # Make your wallpaper blurry
 mkdir /home/$whoami/Pictures -p
-convert -blur 5x5 $location/$1 ~/Pictures/gdmlock.jpg
+convert -blur 20x20 $location/$1 ~/Pictures/gdmlock.jpg
 
 sleep 1
 

@@ -9,7 +9,8 @@ if [ -z "$1" ]; then
 else
   remote="$1"
 fi
-
+echo '>> now wipe ssh  known_hosts: '
+ssh-keygen -f ~/.ssh/known_hosts -R $remote
 echo '>> now transfer resources files: '
 scp ./shadowsocks-remote.sh ./shadowsocks.tar root@$remote:/root
 ssh -t root@$remote "echo '>> now set the new password: [$password] '; passwd root; tar -xf shadowsocks.tar; \
