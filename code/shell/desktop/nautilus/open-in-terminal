@@ -3,4 +3,4 @@ location=`pwd`
 whoami=`whoami`
 
 # open-in-terminal
-/usr/bin/xfce4-terminal --working-directory="$location"
+terminator --geometry=93x32+450+300 --working-directory=$location
