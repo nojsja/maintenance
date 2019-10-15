@@ -1,2 +1,0 @@
-#!/bin/bash
-rpm -ivh ~/rpmbuild/RPMS/x86_64/allweb-1.0.0-1.el7.x86_64.rpm --nodeps --force

@@ -3,6 +3,8 @@ module.exports = new Map ([
   ['node-express-react/website/app/controller/hyhive','*.js'],
   ['node-express-react/website/app/controller/infinity','*.js'],
   ['node-express-react/website/app/controller/public','*.js'],
+  ['node-express-react/website/app/controller/ipsan','*.js'],
+  ['node-express-react/website/app/controller/objectstorage','*.js'],
   ['node-express-react/website/app/controller','*.js'],
   ['node-express-react/website/app/inspector','*.js'],
   ['node-express-react/website/app/middleware','*.js'],

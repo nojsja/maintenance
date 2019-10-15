@@ -1,2 +1,0 @@
-#!/bin/bash
-rpm -evh allweb-1.0.0
