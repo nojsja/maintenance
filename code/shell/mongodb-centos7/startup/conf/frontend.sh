@@ -1,0 +1,11 @@
+export frontendServicePath=/usr/local
+export frontendScriptPath=/root/mongodb
+export mongodbPath=/usr/local/mongodb
+export nodePath=/usr/local/node-linux-x64
+export yapiPath=/usr/local/yapi
+export mongodbPath=/usr/local/mongodb/data/dbs
+export mongodbLogPath=/usr/local/mongodb/data/logs
+export mongodbBackupPath=/opt/mongodb
+export mongodbLogName=mongod.log
+export mongodbHost=0.0.0.0
+export mongodbPort=27017

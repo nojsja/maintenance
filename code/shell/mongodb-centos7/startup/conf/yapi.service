@@ -1,0 +1,27 @@
+[Unit]
+# 服务描述
+Description=Yapi Service
+# 服务描述
+# 指定了在systemd在执行完那些target之后再启动该服务
+After=network.target mongodb.service
+
+[Service]
+# 定义Service的运行类型，一般是forking(后台运行) cp daemon-reload enable restart
+Type=simple
+User=root
+Group=root
+KillMode=control-group
+PIDFile=/run/yapi.pid
+
+# 定义systemctl start|stop|reload *.service 的执行方法
+# 注：ExecStartPre为启动前执行的命令
+ExecStart=pm2 start /usr/local/yapi/vendors/server/app.js --name yapi
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=pm2 stop yapi
+
+# 创建私有的内存临时空间
+PrivateTmp=True
+
+[Install]
+# 多用户
+WantedBy=multi-user.target

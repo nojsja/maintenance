@@ -1,70 +1,95 @@
 #!/bin/bash
 dirname=`pwd`
-mongodb="$dirname/../../mongodb-linux-x86_64-rhel70-3.6.4"
-node="$dirname/../../node-v8.11.1-linux-x64"
-yapi="$dirname/../../my-yapi"
-dbpath="$dirname/../data"
-dblogpath="$dirname/../logs"
+mongodb_pack="$dirname/resource/mongodb-4.0.10.tar.gz"
+node_pack="$dirname/resource/node-v12.14.0-linux-x64.tar.gz"
+yapi_pack="$dirname/resource/yapi.tar.gz"
 
-# # 删除旧数据
-rm "$node" -rf
-rm "$mongodb" -rf
-rm "$yapi" -rf
+env_install() {
+  frontendScriptPath=`pwd`
+  # # 安装基础环境
+  yum -y install unzip
 
-# # 安装基础环境
-yum -y install unzip
+  # # define script path
+  sed '/frontendScriptPath=/d' ./conf/frontend.sh -i
+  sed '/frontendScriptPath=/d' ./conf/frontend.conf -i
+  echo "export frontendScriptPath=$frontendScriptPath" >> ./conf/frontend.sh
+  echo "frontendScriptPath=$frontendScriptPath" >> ./conf/frontend.conf
+
+  # # 配置环境文件
+  cp ./conf/frontend.conf /etc
+  cp ./conf/mongod.conf /etc
+  cp ./conf/frontend.sh /etc/profile.d/
+}
+
+# # env prepare
+get_env_path() {
+  path=$1
+  for var in `cat $1`; do
+    a=`echo $var | awk -F '=' '{print $1}'`
+    b=`echo $var | awk -F '=' '{print $2}'`
+    export $a=$b
+  done
+}
 
 # # node -----------------------
 
-echo '>>> now install nodejs.package ... '
-tar -xf "$node.gzip" -C "$dirname/../../"
-for biname in `ls $node/bin`
-do
-  sudo ln -s "$node/bin/$biname" /usr/bin -f
-done
+nodejs_install() {
+  echo '>>> now install nodejs.package ... '
+  tar -xf $mongodb_pack -C $FrontendServicePath
+  for biname in `ls $nodePath/bin`
+  do
+    sudo ln -s "$nodePath/bin" /usr/bin -f
+  done
 
-# # 设置npm镜像源为国内镜像
-npm config set registry https://registry.npm.taobao.org
+  # # 设置npm镜像源为国内镜像
+  npm config set registry https://registry.npm.taobao.org
+}
 
 # # mongodb ---------------------
 
 # # 解压mongodb二进制包并加入系统变量
-echo '>>> now install mongodb.package ... '
-tar -xf "$mongodb.tgz" -C "$dirname/../../"
-for biname in `ls $mongodb/bin`
-do
-  sudo ln -s "$mongodb/bin/$biname" /usr/bin -f
-done
+mongodb_install() {
+  echo '>>> now install mongodb.package ... '
+  tar -xf "$mongodb_pack" -C $FrontendServicePath
+  for biname in `ls $mongodbPath/bin`
+  do
+    sudo ln -s "$mongodbPath/bin/$biname" /usr/bin -f
+  done
+}
 
-# # 路径存入文件
-touch /etc/frontend
-sed '/MongodbPath=/'d /etc/frontend -i
-echo "MongodbPath=$dirname/.." >> /etc/frontend
+# # yapi ------------------------
 
-# # 清理旧数据
-# rm "$dbpath" -rf
-# rm "$dblogpath" -rf
+# # 解压yapi并加入环境变量
+yapi_install() {
+  echo '>>> now install yapi.package ... '
+  tar -xf "$yapi_pack" -C $FrontendServicePath
+}
 
-echo '>>> now registry mongodb.service ... '
-# # 获取项目路径
-cp "$dirname/mongodb" /etc/init.d -f
-sudo chmod a+x /etc/init.d/mongodb
-chkconfig --add /etc/init.d/mongodb
-chkconfig mongodb on
 
-echo '>>> now start mongodb.service ... '
-bash "mongodb" --start
-echo ">>> now set mongodb-backup crontab service ... "
-bash "mongodb" --crontab -t "10.0.6.200"
+service_registry() {
+  echo '>>> now registry mongodb.service ... '
+  cp ./conf/mongodb.service /usr/lib/systemd/system/ -f
+  systemctl daemon-reload
+  systemctl enable mongodb
+  systemctl start mongodb
+  echo '>>> now registry yapi.service ... '
+  cp ./conf/yapi.service /usr/lib/systemd/system/ -f
+  systemctl daemon-reload
+  systemctl enable yapi
+  systemctl start yapi
+  # echo ">>> now registry mongodb-backup crontab service ... "
+  # bash "mongodb" --crontab -t "10.0.6.200"
+}
 
-# # yapi ---------------------------
-echo '>>> now install yapi.package'
-unzip -q "${yapi}.zip" -d "$dirname/../../"
-bash "yapi" start
+Main() {
+  env_install
+  get_env_path './conf/frontend.conf'
+  nodejs_install
+  mongodb_install
+  yapi_install
+  service_registry
+}
 
-cp "$dirname/yapi" /etc/init.d -f
-sudo chmod a+x /etc/init.d/yapi
-chkconfig --add /etc/init.d/yapi
-chkconfig yapi on
+Main $@
 
-echo ">>> init done."
+echo ">>> node/mongodb/yapi init done."
