@@ -15,9 +15,9 @@ PIDFile=/run/yapi.pid
 
 # 定义systemctl start|stop|reload *.service 的执行方法
 # 注：ExecStartPre为启动前执行的命令
-ExecStart=pm2 start /usr/local/yapi/vendors/server/app.js --name yapi
+ExecStart=/etc/yapi-cmd
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=pm2 stop yapi
+ExecStop=/usr/bin/pm2 stop yapi
 
 # 创建私有的内存临时空间
 PrivateTmp=True

@@ -1,5 +1,6 @@
 #!/bin/bash
-#add for chkconfig
+
+# add for chkconfig
 #chkconfig:23456 70 30
 #description: mongo-service auto start
 
@@ -189,7 +190,7 @@ restore() {
     # 从远程拿文件覆盖本地的备份
     rm $mongodbBackupPath/backup/* -f
     rm $mongodbBackupPath/dump/* -f
-    bash "$MongodbPath/startup/rsync" --get "$ip"
+    bash "$frontendScriptPath/rsync" --get "$ip"
   fi
 
   # 选择从dump恢复还是硬恢复

@@ -1,6 +1,6 @@
 export frontendServicePath=/usr/local
 export frontendScriptPath=/root/mongodb
-export mongodbPath=/usr/local/mongodb
+export mongoPath=/usr/local/mongodb
 export nodePath=/usr/local/node-linux-x64
 export yapiPath=/usr/local/yapi
 export mongodbPath=/usr/local/mongodb/data/dbs

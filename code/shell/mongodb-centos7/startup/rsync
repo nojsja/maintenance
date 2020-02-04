@@ -3,7 +3,7 @@
 # # 变量读取
 # var -- MongodbDir
 readVar() {
-  for var in `cat /etc/frontend`; do
+  for var in `cat /etc/frontend.conf`; do
     a=`echo $var | awk -F '=' '{print $1}'`
     b=`echo $var | awk -F '=' '{print $2}'`
     export $a=$b
@@ -143,8 +143,8 @@ sendBackup() {
   fi
   local ip=$1
   echo ">>> rsync sending mongodb-backup-file to $ip ... "
-  rsync -avz "$BackupPath" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
-  rsync -avz "$DumpPath" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
+  rsync -avz "$mongodbBackupPath/backup" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
+  rsync -avz "$mongodbBackupPath/dump" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
   echo ">>> rsync send backup file done !"
 }
 
@@ -163,7 +163,7 @@ getBackup() {
   fi
 
   echo ">>> get mongodb-backup-file from $ip ... "
-  rsync -avz root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password "$BackupPath/../"
+  rsync -avz root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password "$mongodbBackupPath/"
   echo ">>> get mongodb-backup-file from $ip done ! "
 }
 

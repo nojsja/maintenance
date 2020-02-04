@@ -15,9 +15,9 @@ PIDFile=/run/yapi.pid
 
 # 定义systemctl start|stop|reload *.service 的执行方法
 # 注：ExecStartPre为启动前执行的命令
-ExecStart=mongod -f /etc/mongod.conf
+ExecStart=/usr/bin/mongod -f /etc/mongod.conf
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=mongod --shutdown --dbpath $mongodbPath
+ExecStop=/usr/bin/mongod --shutdown --dbpath $mongodbPath
 
 # 创建私有的内存临时空间
 PrivateTmp=True

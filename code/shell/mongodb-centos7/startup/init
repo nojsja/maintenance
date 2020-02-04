@@ -4,7 +4,8 @@ mongodb_pack="$dirname/resource/mongodb-4.0.10.tar.gz"
 node_pack="$dirname/resource/node-v12.14.0-linux-x64.tar.gz"
 yapi_pack="$dirname/resource/yapi.tar.gz"
 
-env_install() {
+env_prepare() {
+  echo '>>> evn prepare ... '
   frontendScriptPath=`pwd`
   # # 安装基础环境
   yum -y install unzip
@@ -14,11 +15,14 @@ env_install() {
   sed '/frontendScriptPath=/d' ./conf/frontend.conf -i
   echo "export frontendScriptPath=$frontendScriptPath" >> ./conf/frontend.sh
   echo "frontendScriptPath=$frontendScriptPath" >> ./conf/frontend.conf
+  pm2 delete all
 
   # # 配置环境文件
-  cp ./conf/frontend.conf /etc
-  cp ./conf/mongod.conf /etc
-  cp ./conf/frontend.sh /etc/profile.d/
+  cp ./conf/frontend.conf /etc -f
+  cp ./conf/mongod.conf /etc -f
+  cp ./conf/frontend.sh /etc/profile.d/ -f
+  sudo chmod a+x ./yapi-cmd
+  cp ./yapi-cmd /etc/ -f
 }
 
 # # env prepare
@@ -31,15 +35,24 @@ get_env_path() {
   done
 }
 
+# # clean
+clean() {
+  echo '>>> clear cache ... '
+  rm $frontendServicePath/mongodb -rf
+  rm $frontendServicePath/yapi -rf
+  rm $frontendServicePath/node-linux-x64 -rf
+  systemctl stop yapi
+  systemctl stop mongodb
+  systemctl disable yapi
+  systemctl disable mongodb
+}
+
 # # node -----------------------
 
 nodejs_install() {
   echo '>>> now install nodejs.package ... '
-  tar -xf $mongodb_pack -C $FrontendServicePath
-  for biname in `ls $nodePath/bin`
-  do
-    sudo ln -s "$nodePath/bin" /usr/bin -f
-  done
+  tar -xf $node_pack -C $frontendServicePath
+  sudo ln -s "$nodePath/bin/*" /usr/bin -f
 
   # # 设置npm镜像源为国内镜像
   npm config set registry https://registry.npm.taobao.org
@@ -50,11 +63,8 @@ nodejs_install() {
 # # 解压mongodb二进制包并加入系统变量
 mongodb_install() {
   echo '>>> now install mongodb.package ... '
-  tar -xf "$mongodb_pack" -C $FrontendServicePath
-  for biname in `ls $mongodbPath/bin`
-  do
-    sudo ln -s "$mongodbPath/bin/$biname" /usr/bin -f
-  done
+  tar -xf "$mongodb_pack" -C $frontendServicePath
+  sudo ln -s "$mongoPath/bin/*" /usr/bin -f
 }
 
 # # yapi ------------------------
@@ -62,11 +72,13 @@ mongodb_install() {
 # # 解压yapi并加入环境变量
 yapi_install() {
   echo '>>> now install yapi.package ... '
-  tar -xf "$yapi_pack" -C $FrontendServicePath
+  tar -xf "$yapi_pack" -C $frontendServicePath
 }
 
 
 service_registry() {
+  # echo ">>> now registry pm2-root.service ... "
+  # pm2 startup
   echo '>>> now registry mongodb.service ... '
   cp ./conf/mongodb.service /usr/lib/systemd/system/ -f
   systemctl daemon-reload
@@ -82,8 +94,9 @@ service_registry() {
 }
 
 Main() {
-  env_install
+  env_prepare
   get_env_path './conf/frontend.conf'
+  clean
   nodejs_install
   mongodb_install
   yapi_install
@@ -92,4 +105,4 @@ Main() {
 
 Main $@
 
-echo ">>> node/mongodb/yapi init done."
+echo ">>> node|mongodb|yapi init done."

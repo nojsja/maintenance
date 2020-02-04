@@ -1,0 +1,33 @@
+#!/bin/bash
+#add for chkconfig
+#chkconfig:23456 80 20
+#description: yapi-service auto start
+
+# # 变量读取
+# var -- MongodbDir
+readVar() {
+  if [ ! -e /etc/frontend.conf ]; then
+    echo ">>> You need to exec init.sh first ... "
+    echo ">>> now exit ..."
+    exit 0
+  fi
+  for var in `cat /etc/frontend.conf`; do
+    a=`echo $var | awk -F '=' '{print $1}'`
+    b=`echo $var | awk -F '=' '{print $2}'`
+    export $a=$b
+  done
+}
+
+readVar
+
+if [ ! -d $frontendServicePath/yapi/vendors/node_modules ]; then
+  tar -xf $frontendServicePath/yapi/vendors/node_modules.tar.gz -C $frontendServicePath/yapi/vendors/
+fi
+
+if [ -n `/usr/bin/pm2 pid yapi` ]; then
+  pm2 start yapi
+else
+  /usr/bin/pm2 start $frontendServicePath/yapi/vendors/server/app.js --name yapi
+fi
+
+/usr/bin/pm2 logs;
