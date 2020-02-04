@@ -8,7 +8,7 @@ env_prepare() {
   echo '>>> evn prepare ... '
   frontendScriptPath=`pwd`
   # # 安装基础环境
-  yum -y install unzip
+  # yum -y install unzip
 
   # # define script path
   sed '/frontendScriptPath=/d' ./conf/frontend.sh -i
@@ -38,13 +38,13 @@ get_env_path() {
 # # clean
 clean() {
   echo '>>> clear cache ... '
-  rm $frontendServicePath/mongodb -rf
-  rm $frontendServicePath/yapi -rf
-  rm $frontendServicePath/node-linux-x64 -rf
   systemctl stop yapi
   systemctl stop mongodb
   systemctl disable yapi
   systemctl disable mongodb
+  rm $frontendServicePath/mongodb -rf
+  rm $frontendServicePath/yapi -rf
+  rm $frontendServicePath/node-linux-x64 -rf
 }
 
 # # node -----------------------
@@ -73,24 +73,32 @@ mongodb_install() {
 yapi_install() {
   echo '>>> now install yapi.package ... '
   tar -xf "$yapi_pack" -C $frontendServicePath
+  if [ ! -d $frontendServicePath/yapi/vendors/node_modules ]; then
+    tar -xf $frontendServicePath/yapi/vendors/node_modules.tar.gz -C $frontendServicePath/yapi/vendors/
+  fi
 }
 
 
 service_registry() {
   # echo ">>> now registry pm2-root.service ... "
   # pm2 startup
-  echo '>>> now registry mongodb.service ... '
   cp ./conf/mongodb.service /usr/lib/systemd/system/ -f
-  systemctl daemon-reload
-  systemctl enable mongodb
-  systemctl start mongodb
-  echo '>>> now registry yapi.service ... '
   cp ./conf/yapi.service /usr/lib/systemd/system/ -f
   systemctl daemon-reload
+  systemctl enable mongodb
   systemctl enable yapi
+  echo '>>> now registry mongodb.service ... '
+  systemctl start mongodb
+  sleep 2
+  echo '>>> now registry yapi.service ... '
   systemctl start yapi
   # echo ">>> now registry mongodb-backup crontab service ... "
-  # bash "mongodb" --crontab -t "10.0.6.200"
+  # bash "mongodb" --crontab -t "10.0.6.206"
+}
+
+finally() {
+  systemctl stop mongodb
+  systemctl start mongodb
 }
 
 Main() {

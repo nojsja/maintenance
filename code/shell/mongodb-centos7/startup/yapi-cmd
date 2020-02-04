@@ -20,14 +20,6 @@ readVar() {
 
 readVar
 
-if [ ! -d $frontendServicePath/yapi/vendors/node_modules ]; then
-  tar -xf $frontendServicePath/yapi/vendors/node_modules.tar.gz -C $frontendServicePath/yapi/vendors/
-fi
-
-if [ -n `/usr/bin/pm2 pid yapi` ]; then
-  pm2 start yapi
-else
-  /usr/bin/pm2 start $frontendServicePath/yapi/vendors/server/app.js --name yapi
-fi
+/usr/bin/pm2 start $frontendServicePath/yapi/vendors/server/app.js --name yapi
 
 /usr/bin/pm2 logs;
