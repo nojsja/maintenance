@@ -12,11 +12,11 @@ readVar() {
 
 # # 检查变量
 checkVar() {
-  if [ -z "$BackupPath" ]; then
+  if [ -z "$mongodbBackupPath" ]; then
     readVar
   fi
 
-  if [ -z "$BackupPath" ]; then
+  if [ -z "$mongodbBackupPath" ]; then
     echo ">>> please init mongodb env and run [bash mongodb --backup] first!"
     exit 1
   fi
@@ -130,6 +130,8 @@ initRsync() {
 
   # 启动rsync
   start
+
+  firewall-cmd --zone=public --add-port=873/tcp --permanent
 
   echo ">>> rsync init done !"
 }
