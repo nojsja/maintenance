@@ -112,7 +112,7 @@ backup() {
   echo ">>> now backup mongodb data and logs ... "
   mkdir -p $mongodbBackupPath
 
-  local ip=$1
+  local ip=""
   local backupPath=$mongodbBackupPath/backup
   local dumpPath=$mongodbBackupPath/dump
   local today=$(date +%Y-%m-%d)
@@ -121,27 +121,41 @@ backup() {
 
   mkdir $backupPath -p
   mkdir $dumpPath -p
+  rm $backupPath/$today -rf
+  mkdir $backupPath/$today -p
+  rm $dumpPath/$today -rf
+  mkdir $dumpPath/$today -p
+
+  while [ -n "$1" ]; do
+    case "$1" in
+      --ip )
+        ip="$2"
+        shift
+      ;;
+    esac
+    shift
+  done
 
   # 硬备份数据和日志文件到本地
   echo ">>> packaging logs and data to $backupPath ... "
-  rm $mongodbBackupPath/backup/* -f
-  tar -czf $mongodbBackupPath/backup/${lastDbPath}_$today.gzip -C $mongodbPath/../ $lastDbPath
-  tar -czf $mongodbBackupPath/backup/${lastLogPath}_$today.gzip -C $mongodbLogPath/../ $lastLogPath
+  # rm $mongodbBackupPath/backup/* -f
+  tar -czf $mongodbBackupPath/backup/$today/${lastDbPath}.gzip -C $mongodbPath/../ $lastDbPath
+  tar -czf $mongodbBackupPath/backup/$today/${lastLogPath}.gzip -C $mongodbLogPath/../ $lastLogPath
 
   # dump导出yapi数据库到本地
   echo ">>> dumping logs and data to $dumpPath ... "
 
-  rm $dumpPath/* -rf
+  # rm $dumpPath/* -rf
 
-  mongodump -h $mongodbHost -d 'yapi' -o $dumpPath
-  mongodump -h $mongodbHost -d 'admin' -o $dumpPath
-  mongodump -h $mongodbHost -d 'config' -o $dumpPath
-  mongodump -h $mongodbHost -d 'local' -o $dumpPath
+  mongodump -h $mongodbHost -d "yapi" -o $dumpPath/$today
+  mongodump -h $mongodbHost -d "admin" -o $dumpPath/$today
+  mongodump -h $mongodbHost -d "config" -o $dumpPath/$today
+  mongodump -h $mongodbHost -d "local" -o $dumpPath/$today
 
-  for dp in $(ls $dumpPath); do
-    if [ -d $dumpPath/$dp ]; then
-      tar -czf $dumpPath/$dp.gzip -C $dumpPath $dp
-      rm $dumpPath/$dp -rf
+  for dp in $(ls $dumpPath/$today); do
+    if [ -d $dumpPath/$today/$dp ]; then
+      tar -czf $dumpPath/$today/${dp}.gzip -C $dumpPath/$today $dp
+      rm $dumpPath/$today/$dp -rf
     fi
   done
 
@@ -158,25 +172,30 @@ backup() {
 # # 恢复mongodb数据 --------------
 # mongorestore -h 127.0.0.1 -d yapi /root/mongodb/dump/yapi
 restore() {
-  read -p 'are you sure to restore mongodb data from backup file (y/n) ? > ' -a choise
-  if [[ "$choise" != "y" ]]; then
-    exit 0
-  fi
-
-  local fromDump="no"
+  local fromDump="hard"
   local ip=""
+  local date=""
 
   while [ -n "$1" ]; do
     case "$1" in
-       --dump )
-        fromDump="yes"
-       ;;
-       * )
-        ip="$1"
-       ;;
+      --dump )
+        fromDump="dump"
+      ;;
+      --ip )
+        ip="$2"
+        shift
+      ;;
+      --date )
+        date=$2
+        shift
     esac
     shift
   done
+
+  read -p "are you sure to restore mongodb data from backup file ($fromDump) ? please input y/n >" -a choise
+  if [[ "$choise" != "y" ]]; then
+    exit 0
+  fi
 
   echo ">>> now restore mongodb data and logs ... "
   # 检查路径
@@ -184,27 +203,30 @@ restore() {
     echo ">>> checkout mongodb backup path fail!"
     exit 1
   fi
+  if [ -z $date ]; then
+    echo ">>> operation restore need param - [date], [2020-05-20] e.g"
+  fi
 
   # 检查是否从远程拿取备份文件
   if [ -n "$ip" ]; then
     # 从远程拿文件覆盖本地的备份
-    rm $mongodbBackupPath/backup/* -f
-    rm $mongodbBackupPath/dump/* -f
+    rm $mongodbBackupPath/backup/$date/* -f
+    rm $mongodbBackupPath/dump/$date/* -f
     bash $frontendScriptPath/rsync --get $ip
   fi
 
   # 选择从dump恢复还是硬恢复
-  if [[ $fromDump == "no" ]]; then
+  if [[ $fromDump == "hard" ]]; then
     # 检查本地备份文件
-    local allBackupFiles=$(ls $mongodbBackupPath/backup)
+    local allBackupFiles=$(ls $mongodbBackupPath/backup/$date)
     local dataFile=''
     local logFile=''
     for backupFile in ${allBackupFiles[@]}; do
-      if [ -n "`echo $backupFile | sed '/data/'p -n`" ]; then
-        dataFile=$backupFile
+      if [ -n "`echo $backupFile | sed '/dbs/'p -n`" ]; then
+        dataFile=$mongodbBackupPath/backup/$date/$backupFile
       fi
-      if [ -n `echo $backupFile | sed '/log/'p -n` ]; then
-        logFile=$backupFile
+      if [ -n `echo $backupFile | sed '/logs/'p -n` ]; then
+        logFile=$mongodbBackupPath/backup/$date/$backupFile
       fi
     done
 
@@ -212,31 +234,32 @@ restore() {
     echo ">>> now trying to stop mongodb ... "
     stop
 
-    if [ -f $allBackupFiles/$dataFile ]; then
+    if [ -f $dataFile ]; then
       rm $mongodbPath/data -rf
-      tar -xf $allBackupFiles/$dataFile -C $mongodbPath
+      tar -xf $dataFile -C $mongodbPath
       echo ">>> mongodb data file restore done!"
     fi
 
-    if [ -f $allBackupFiles/$logFile ]; then
+    if [ -f $logFile ]; then
       rm $mongodbPath/logs -rf
-      tar -xf $allBackupFiles/$logFile -C $mongodbPath
+      tar -xf $logFile -C $mongodbPath
       echo ">>> mongodb log file restore done!"
     fi
 
     # 开启mongodb
     echo ">>> now trying to start mongodb ... "
-    start
+    # start
+    systemctl start mongodb
 
   else
 
     local baseName=''
-    for dp in $(ls $mongodbBackupPath/dump); do
-      if [ -f $mongodbBackupPath/dump/$dp ]; then
+    for dp in $(ls $mongodbBackupPath/dump/$date); do
+      if [ -f $mongodbBackupPath/dump/$date/$dp ]; then
         baseName=$(basename "$dp" .gzip)
-        tar -xf $mongodbBackupPath/dump/$dp -C $mongodbBackupPath/dump
-        mongorestore -h $mongodbHost -d $baseName $mongodbBackupPath/dump/$baseName
-        rm $mongodbBackupPath/dump/$baseName -rf
+        tar -xf $mongodbBackupPath/dump/$date/$dp -C $mongodbBackupPath/dump/$date
+        mongorestore -h $mongodbHost -d $baseName $mongodbBackupPath/dump/$date/$baseName
+        rm $mongodbBackupPath/dump/$date/$baseName -rf
       fi
     done
 
@@ -277,7 +300,7 @@ setCronTab() {
   echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $scheduleFile
   echo "" >> $scheduleFile
   echo "# minute   hour   day   month   week   command" >> $scheduleFile
-  echo "$timeRule bash $frontendScriptPath/mongodb --backup $ip" >> $scheduleFile
+  echo "$timeRule bash $frontendScriptPath/mongodb backup --ip $ip" >> $scheduleFile
 
   # 删除旧的crontab任务
   disableCronTab
@@ -300,16 +323,15 @@ showUsage() {
   echo "|___ param: [--restart | restart ]      => restart mongodb.service"
   echo "|___ param: [--clean   | clean   ]      => wipe mongodb data and restart"
   echo "|___ param: [--clean-remote | -cr] [ip]          => clean remote [ip]'s mongodb backup file before today(`date +%Y-%m-%d`)"
-  echo "|___ param: [--backup  | backup  ] [ip]          => backup mongodb data to local and remote(if you set the param [ip])"
-  echo "       |___ example: bash mongodb --backup 10.0.6.231"
-  echo "       |___ example: bash mongodb backup 10.0.6.231"
+  echo "|___ param: [ backup ] [--ip ip]          => backup mongodb data to local and remote(if you set the param [ip])"
+  echo "       |___ example: bash mongodb backup --ip 10.0.6.231"
+  echo "       |___ example: bash mongodb backup --ip 10.0.6.231"
   echo "       |___ example: bash mongodb backup"
   echo
-  echo "|___ param: [--restore | restore ] [ip] [--dump] => restore mongodb data from local or remote(if you set the param [ip])"
-  echo "       |___ example: bash mongodb --restore --dump 10.0.6.231"
-  echo "       |___ example: bash mongodb --restore 10.0.6.231 --dump"
-  echo "       |___ example: bash mongodb --restore 10.0.6.231"
-  echo "       |___ example: bash mongodb restore 10.0.6.231"
+  echo "|___ param: [ restore ] [--ip ip] [--dump] => restore mongodb data from local or remote(if you set the param [ip])"
+  echo "       |___ example: bash mongodb restore --dump --ip 10.0.6.231"
+  echo "       |___ example: bash mongodb restore --ip 10.0.6.231 --dump"
+  echo "       |___ example: bash mongodb restore --ip 10.0.6.231"
   echo "       |___ example: bash mongodb restore"
   echo
   echo "|___ param: [--crontab           ]      => enable mongodb-backup service crontab service"
@@ -347,12 +369,13 @@ case $1 in
     cleanRemoteBackup $@
   ;;
 
-  --backup | backup)
+  backup )
     checkVar
-    backup $2
+    shift
+    backup $@
   ;;
 
-  --restore | restore )
+  restore )
     checkVar
     shift
     restore $@

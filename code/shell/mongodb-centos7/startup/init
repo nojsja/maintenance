@@ -8,7 +8,7 @@ env_prepare() {
   echo '>>> evn prepare ... '
   frontendScriptPath=`pwd`
   # # 安装基础环境
-  # yum -y install unzip
+  yum -y install net-tools
 
   # # define script path
   sed '/frontendScriptPath=/d' ./conf/frontend.sh -i
