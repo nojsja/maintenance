@@ -1,8 +1,8 @@
 #!/bin/bash
 dirname=`pwd`
-mongodb_pack="$dirname/resource/mongodb-4.0.10.tar.gz"
-node_pack="$dirname/resource/node-v12.14.0-linux-x64.tar.gz"
-yapi_pack="$dirname/resource/yapi.tar.gz"
+mongodb_pack=$dirname/resource/mongodb-4.0.10.tar.gz
+node_pack=$dirname/resource/node-v12.14.0-linux-x64.tar.gz
+yapi_pack=$dirname/resource/yapi.tar.gz
 
 env_prepare() {
   echo '>>> evn prepare ... '
@@ -52,7 +52,7 @@ clean() {
 nodejs_install() {
   echo '>>> now install nodejs.package ... '
   tar -xf $node_pack -C $frontendServicePath
-  sudo ln -s "$nodePath/bin/*" /usr/bin -f
+  sudo ln -s $nodePath/bin/* /usr/bin -f
 
   # # 设置npm镜像源为国内镜像
   npm config set registry https://registry.npm.taobao.org
@@ -63,8 +63,8 @@ nodejs_install() {
 # # 解压mongodb二进制包并加入系统变量
 mongodb_install() {
   echo '>>> now install mongodb.package ... '
-  tar -xf "$mongodb_pack" -C $frontendServicePath
-  sudo ln -s "$mongoPath/bin/*" /usr/bin -f
+  tar -xf $mongodb_pack -C $frontendServicePath
+  sudo ln -s $mongoPath/bin/* /usr/bin -f
 }
 
 # # yapi ------------------------
@@ -72,7 +72,7 @@ mongodb_install() {
 # # 解压yapi并加入环境变量
 yapi_install() {
   echo '>>> now install yapi.package ... '
-  tar -xf "$yapi_pack" -C $frontendServicePath
+  tar -xf $yapi_pack -C $frontendServicePath
   if [ ! -d $frontendServicePath/yapi/vendors/node_modules ]; then
     tar -xf $frontendServicePath/yapi/vendors/node_modules.tar.gz -C $frontendServicePath/yapi/vendors/
   fi

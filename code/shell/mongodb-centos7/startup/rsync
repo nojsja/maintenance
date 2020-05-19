@@ -31,12 +31,12 @@ checkRsync() {
   local xinetdInfo=$(rpm -qa xinetd)
   echo ">>> check rsync env ... "
 
-  if [ ! -f "$confFile" -o ! -f "$passwdFile" ]; then
+  if [ ! -f $confFile -o ! -f $passwdFile ]; then
     echo ">>> please run 'bash rsync --init' first ... "
     return 1
   fi
 
-  if [ -z "$rsyncInfo" -o -z "$xinetdInfo" ]; then
+  if [ -z $rsyncInfo -o -z $xinetdInfo ]; then
     echo ">>> please run 'bash rsync --init' first ... "
     return 1
   fi
@@ -50,8 +50,8 @@ configRsync() {
 
   local confFile=/etc/rsyncd.conf
   local passwdFile=/etc/rsyncd.password
-  [ -f "$confFile" ] && rm $confFile
-  [ -f "$passwdFile" ] && rm $passwdFile
+  [ -f $confFile ] && rm $confFile
+  [ -f $passwdFile ] && rm $passwdFile
   touch $confFile
   touch $passwdFile
 
@@ -100,7 +100,7 @@ initRsync() {
   # 配置xinetd
   echo ">>> config rsync.conf ..."
   local rsynconf=/etc/xinetd.d/rsync
-  [ -f "$rsynconf" ] && rm $rsynconf
+  [ -f $rsynconf ] && rm $rsynconf
   touch $rsynconf
 
   echo "service rsync {" >> $rsynconf
@@ -145,8 +145,8 @@ sendBackup() {
   fi
   local ip=$1
   echo ">>> rsync sending mongodb-backup-file to $ip ... "
-  rsync -avz "$mongodbBackupPath/backup" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
-  rsync -avz "$mongodbBackupPath/dump" root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password
+  rsync -avz $mongodbBackupPath/backup root@$ip::mongo_backup --password-file=/etc/rsyncd.password
+  rsync -avz $mongodbBackupPath/dump root@$ip::mongo_backup --password-file=/etc/rsyncd.password
   echo ">>> rsync send backup file done !"
 }
 
@@ -165,7 +165,7 @@ getBackup() {
   fi
 
   echo ">>> get mongodb-backup-file from $ip ... "
-  rsync -avz root@"$ip"::mongo_backup --password-file=/etc/rsyncd.password "$mongodbBackupPath/"
+  rsync -avz root@$ip::mongo_backup --password-file=/etc/rsyncd.password $mongodbBackupPath/
   echo ">>> get mongodb-backup-file from $ip done ! "
 }
 
@@ -204,9 +204,9 @@ uninstall() {
   chkconfig xinetd off
 
   echo ">>> remove config files ... "
-  [ -f "/etc/xinetd.d/rsync" ] && rm /etc/xinetd.d/rsync
-  [ -f "/etc/rsyncd.conf" ] && rm /etc/rsyncd.conf
-  [ -f "/etc/rsyncd.password" ] && rm /etc/rsyncd.password
+  [ -f /etc/xinetd.d/rsync ] && rm /etc/xinetd.d/rsync
+  [ -f /etc/rsyncd.conf ] && rm /etc/rsyncd.conf
+  [ -f /etc/rsyncd.password ] && rm /etc/rsyncd.password
 
   echo ">>> rsync uninstall done! bye ~"
   echo ""

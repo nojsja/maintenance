@@ -44,8 +44,8 @@ stop() {
 # # 启动mongodb进程 --------------
 start() {
   # 01 make dbpath
-  mkdir "$mongodbPath" -p
-  mkdir "$mongodbLogPath" -p
+  mkdir $mongodbPath -p
+  mkdir $mongodbLogPath -p
 
   echo ">>> now check mongodb $mongodbPort ... "
   grep_port=`netstat -tlpn | grep "\b$mongodbPort\b"`
@@ -75,8 +75,8 @@ clean() {
 
   backup
   stop
-  rm "$mongodbPath" -rf
-  rm "$mongodbLogPath" -rf
+  rm $mongodbPath -rf
+  rm $mongodbLogPath -rf
   start
 
   echo
@@ -95,7 +95,7 @@ cleanRemoteBackup() {
 
   if [ -n "$ip" ]; then
     echo ">>> now delete remote backup files ... "
-    ssh root@$ip rm -r -f "/root/mongodb/backup" "/root/mongodb/dump"
+    ssh root@$ip rm -r -f /root/mongodb/backup /root/mongodb/dump
     backup $ip
     echo ">>> clean remote mongodb backup file and re-backup done ! "
   else
@@ -112,9 +112,9 @@ backup() {
   echo ">>> now backup mongodb data and logs ... "
   mkdir -p $mongodbBackupPath
 
-  local ip="$1"
-  local backupPath="$mongodbBackupPath/backup"
-  local dumpPath="$mongodbBackupPath/dump"
+  local ip=$1
+  local backupPath=$mongodbBackupPath/backup
+  local dumpPath=$mongodbBackupPath/dump
   local today=$(date +%Y-%m-%d)
   local lastDbPath=$(echo $mongodbPath | awk -F '/' '{print $NF}')
   local lastLogPath=$(echo $mongodbLogPath | awk -F "/" '{print $NF}')
@@ -124,30 +124,30 @@ backup() {
 
   # 硬备份数据和日志文件到本地
   echo ">>> packaging logs and data to $backupPath ... "
-  rm "$mongodbBackupPath/backup/*" -f
+  rm $mongodbBackupPath/backup/* -f
   tar -czf $mongodbBackupPath/backup/${lastDbPath}_$today.gzip -C $mongodbPath/../ $lastDbPath
-  tar -czf $mongodbBackupPath/backup/"${lastLogPath}_$today.gzip" -C $mongodbLogPath/../ $lastLogPath
+  tar -czf $mongodbBackupPath/backup/${lastLogPath}_$today.gzip -C $mongodbLogPath/../ $lastLogPath
 
   # dump导出yapi数据库到本地
   echo ">>> dumping logs and data to $dumpPath ... "
 
-  rm "$dumpPath"/* -rf
+  rm $dumpPath/* -rf
 
-  mongodump -h $mongodbHost -d 'yapi' -o "$dumpPath"
-  mongodump -h $mongodbHost -d 'admin' -o "$dumpPath"
-  mongodump -h $mongodbHost -d 'config' -o "$dumpPath"
-  mongodump -h $mongodbHost -d 'local' -o "$dumpPath"
+  mongodump -h $mongodbHost -d 'yapi' -o $dumpPath
+  mongodump -h $mongodbHost -d 'admin' -o $dumpPath
+  mongodump -h $mongodbHost -d 'config' -o $dumpPath
+  mongodump -h $mongodbHost -d 'local' -o $dumpPath
 
   for dp in $(ls $dumpPath); do
-    if [ -d "$dumpPath/$dp" ]; then
-      tar -czf "$dumpPath/$dp.gzip" -C "$dumpPath" "$dp"
-      rm "$dumpPath/$dp" -rf
+    if [ -d $dumpPath/$dp ]; then
+      tar -czf $dumpPath/$dp.gzip -C $dumpPath $dp
+      rm $dumpPath/$dp -rf
     fi
   done
 
   # 所有数据备份到远程机器
-  if [ -n "$ip" ]; then
-    bash "$frontendScriptPath/rsync" --send "$ip"
+  if [ -n $ip ]; then
+    bash $frontendScriptPath/rsync --send "$ip"
   fi
 
   echo
@@ -180,7 +180,7 @@ restore() {
 
   echo ">>> now restore mongodb data and logs ... "
   # 检查路径
-  if [ -z "$mongodbBackupPath" ]; then
+  if [ -z $mongodbBackupPath ]; then
     echo ">>> checkout mongodb backup path fail!"
     exit 1
   fi
@@ -190,7 +190,7 @@ restore() {
     # 从远程拿文件覆盖本地的备份
     rm $mongodbBackupPath/backup/* -f
     rm $mongodbBackupPath/dump/* -f
-    bash "$frontendScriptPath/rsync" --get "$ip"
+    bash $frontendScriptPath/rsync --get $ip
   fi
 
   # 选择从dump恢复还是硬恢复
@@ -212,15 +212,15 @@ restore() {
     echo ">>> now trying to stop mongodb ... "
     stop
 
-    if [ -f "$allBackupFiles/$dataFile" ]; then
+    if [ -f $allBackupFiles/$dataFile ]; then
       rm $mongodbPath/data -rf
-      tar -xf "$allBackupFiles"/$dataFile -C $mongodbPath
+      tar -xf $allBackupFiles/$dataFile -C $mongodbPath
       echo ">>> mongodb data file restore done!"
     fi
 
-    if [ -f "$allBackupFiles/$logFile" ]; then
+    if [ -f $allBackupFiles/$logFile ]; then
       rm $mongodbPath/logs -rf
-      tar -xf "$allBackupFiles"/$logFile -C $mongodbPath
+      tar -xf $allBackupFiles/$logFile -C $mongodbPath
       echo ">>> mongodb log file restore done!"
     fi
 
@@ -232,7 +232,7 @@ restore() {
 
     local baseName=''
     for dp in $(ls $mongodbBackupPath/dump); do
-      if [ -f "$mongodbBackupPath/dump/$dp" ]; then
+      if [ -f $mongodbBackupPath/dump/$dp ]; then
         baseName=$(basename "$dp" .gzip)
         tar -xf $mongodbBackupPath/dump/$dp -C $mongodbBackupPath/dump
         mongorestore -h $mongodbHost -d $baseName $mongodbBackupPath/dump/$baseName
@@ -253,7 +253,7 @@ setCronTab() {
   local timeRule="* 0-23/5 * * * "
 
   local ip=""
-  local scheduleFile="$frontendScriptPath/conf/rsync-schedule"
+  local scheduleFile=$frontendScriptPath/conf/rsync-schedule
 
   while [ -n "$1" ]; do
     case "$1" in
@@ -269,8 +269,8 @@ setCronTab() {
     shift
   done
 
-  rm "$scheduleFile" -f
-  touch "$scheduleFile"
+  rm $scheduleFile -f
+  touch $scheduleFile
 
   echo "# # mongodb备份定时任务" >> $scheduleFile
   echo "SHELL=/bin/bash" >> $scheduleFile

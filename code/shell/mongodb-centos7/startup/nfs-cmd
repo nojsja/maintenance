@@ -1,0 +1,63 @@
+#!/bin/bash
+# https://www.cnblogs.com/lizm166/p/10601667.html
+# 10.0.5.6:/backup_zentao/YAPI_BAK
+
+# 一、NFS挂载
+# 192.25.10.101/home/sharedata/azkaban/ODS_HS08 挂载到 192.25.10.102/home/data_azkaban2
+
+# （一）192.25.10.101上操作：
+# 1，查看rpcbind、nfs是否安装
+# rpm -qa|grep nfs
+
+# rpm -qa|grep rpcbind
+
+# 安装命令：yum install -y nfs-utils rpcbind
+
+# 2，vi /etc/exports
+# 内容：/home/sharedata/azkaban/ODS_HS08 192.25.105.188/24(rw,sync)
+
+# 生效命令：exportfs -arv
+
+# 参数：-a 全部挂载或卸载 /etc/exports中的内容
+
+# -r 重新读取/etc/exports 中的信息 ，并同步更新/etc/exports、/var/lib/nfs/xtab
+
+# -u 卸载单一目录（和-a一起使用为卸载所有/etc/exports文件中的目录）
+
+# -v 在export的时候，将详细的信息输出到屏幕上。
+
+# 3，重启服务
+# -- 停止
+# service rpcbind stop
+# service nfs stop
+# -- 启动
+# service rpcbind start
+# service nfs start
+# --查看状态
+# service rpcbind status
+# service nfs status
+
+# 4，查看挂载情况
+# showmount -e localhost #查询本机nfs共享目录情况
+
+# showmount -a localhost #查询本机共享目录连接情况
+
+# （二）192.25.10.102上操作
+# 1，查看rpcbind、nfs是否安装
+# rpm -qa|grep nfs
+
+# rpm -qa|grep rpcbind
+
+# 安装命令：yum install -y nfs-utils rpcbind
+
+# 2，挂载
+# 挂载命令：mount -t nfs 192.25.105.186:/home/sharedata/azkaban/ODS_HS08 /home/data_azkaban
+
+# 3，取消挂载
+# 查看占用命令：fuser -mv /home/data_azkaban
+
+# 杀死占用命令：fuser -kv /home/data_azkaban
+
+# 取消挂载命令：umount -a
+
+mount -t nfs 10.0.5.6:/backup_zentao/YAPI_BAK /root/yapi-bak
