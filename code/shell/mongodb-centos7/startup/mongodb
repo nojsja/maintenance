@@ -93,7 +93,7 @@ cleanRemoteBackup() {
     exit 0
   fi
 
-  if [ -n "$ip" ]; then
+  if [ $ip ]; then
     echo ">>> now delete remote backup files ... "
     ssh root@$ip rm -r -f /root/mongodb/backup /root/mongodb/dump
     backup $ip
@@ -160,7 +160,7 @@ backup() {
   done
 
   # 所有数据备份到远程机器
-  if [ -n $ip ]; then
+  if [ $ip ]; then
     bash $frontendScriptPath/rsync --send "$ip"
   fi
 
@@ -205,10 +205,11 @@ restore() {
   fi
   if [ -z $date ]; then
     echo ">>> operation restore need param - [date], [2020-05-20] e.g"
+    exit
   fi
 
   # 检查是否从远程拿取备份文件
-  if [ -n "$ip" ]; then
+  if [ $ip ]; then
     # 从远程拿文件覆盖本地的备份
     rm $mongodbBackupPath/backup/$date/* -f
     rm $mongodbBackupPath/dump/$date/* -f
