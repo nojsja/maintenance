@@ -4,8 +4,22 @@ mongodb_pack=$dirname/resource/mongodb-4.0.10.tar.gz
 node_pack=$dirname/resource/node-v12.14.0-linux-x64.tar.gz
 yapi_pack=$dirname/resource/yapi.tar.gz
 
+# # warning / success print
+function fLog(){
+  if [ "${1}" -ne 0 ]
+  then
+    echo
+    printf "\033[1;31m%b\033[0m" " ${2} \n"
+    echo
+  else
+    echo
+    printf "\033[1;32m%b\033[0m" "${2} \n"
+    echo
+  fi
+}
+
 env_prepare() {
-  echo '>>> evn prepare ... '
+  fLog 0 '>>> evn prepare ... '
   frontendScriptPath=`pwd`
   # # 安装基础环境
   yum -y install net-tools
@@ -37,7 +51,7 @@ get_env_path() {
 
 # # clean
 clean() {
-  echo '>>> clear cache ... '
+  fLog 0 '>>> clear cache ... '
   systemctl stop yapi
   systemctl stop mongodb
   systemctl disable yapi
@@ -50,7 +64,7 @@ clean() {
 # # node -----------------------
 
 nodejs_install() {
-  echo '>>> now install nodejs.package ... '
+  fLog 0 '>>> now install nodejs.package ... '
   tar -xf $node_pack -C $frontendServicePath
   sudo ln -s $nodePath/bin/* /usr/bin -f
 
@@ -62,7 +76,7 @@ nodejs_install() {
 
 # # 解压mongodb二进制包并加入系统变量
 mongodb_install() {
-  echo '>>> now install mongodb.package ... '
+  fLog 0 '>>> now install mongodb.package ... '
   tar -xf $mongodb_pack -C $frontendServicePath
   sudo ln -s $mongoPath/bin/* /usr/bin -f
 }
@@ -71,7 +85,7 @@ mongodb_install() {
 
 # # 解压yapi并加入环境变量
 yapi_install() {
-  echo '>>> now install yapi.package ... '
+  fLog 0 '>>> now install yapi.package ... '
   tar -xf $yapi_pack -C $frontendServicePath
   if [ ! -d $frontendServicePath/yapi/vendors/node_modules ]; then
     tar -xf $frontendServicePath/yapi/vendors/node_modules.tar.gz -C $frontendServicePath/yapi/vendors/
@@ -87,10 +101,10 @@ service_registry() {
   systemctl daemon-reload
   systemctl enable mongodb
   systemctl enable yapi
-  echo '>>> now registry mongodb.service ... '
+  fLog 0 '>>> now registry mongodb.service ... '
   systemctl start mongodb
   sleep 2
-  echo '>>> now registry yapi.service ... '
+  fLog 0 '>>> now registry yapi.service ... '
   systemctl start yapi
   # echo ">>> now registry mongodb-backup crontab service ... "
   # bash "mongodb" --crontab -t "10.0.6.206"
@@ -109,8 +123,7 @@ Main() {
   mongodb_install
   yapi_install
   service_registry
+  fLog 0 ">>> node|mongodb|yapi init done."
 }
 
 Main $@
-
-echo ">>> node|mongodb|yapi init done."

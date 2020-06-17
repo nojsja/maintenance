@@ -19,6 +19,21 @@ readVar() {
   done
 }
 
+# # warning / success print
+function fLog(){
+  if [ "${1}" -ne 0 ]
+  then
+    echo
+    printf "\033[1;31m%b\033[0m" " ${2} \n"
+    echo
+  else
+    echo
+    printf "\033[1;32m%b\033[0m" "${2} \n"
+    echo
+  fi
+}
+
+
 # # 变量检查
 checkVar() {
   mongodbPath=""
@@ -47,14 +62,14 @@ start() {
   mkdir $mongodbPath -p
   mkdir $mongodbLogPath -p
 
-  echo ">>> now check mongodb $mongodbPort ... "
+  fLog 0 ">>> now check mongodb $mongodbPort ... "
   grep_port=`netstat -tlpn | grep "\b$mongodbPort\b"`
 
   if [ -n "$grep_port" ]
   then
-    echo ">>> mongodb already started in port:$mongodbPort ..."
+    fLog 0 ">>> mongodb already started in port:$mongodbPort ..."
   else
-    echo ">>> trying to start mongodb service ..."
+    fLog 0 ">>> trying to start mongodb service ..."
 
     mongod -f ./conf/mongod.conf
   fi
@@ -80,7 +95,7 @@ clean() {
   start
 
   echo
-  echo ">>> mongodb clean done! "
+  fLog 0 ">>> mongodb clean done! "
   echo
 }
 
@@ -94,13 +109,13 @@ cleanRemoteBackup() {
   fi
 
   if [ $ip ]; then
-    echo ">>> now delete remote backup files ... "
+    fLog 0 ">>> now delete remote backup files ... "
     ssh root@$ip rm -r -f /root/mongodb/backup /root/mongodb/dump
     backup $ip
-    echo ">>> clean remote mongodb backup file and re-backup done ! "
+    fLog 0 ">>> clean remote mongodb backup file and re-backup done ! "
   else
-    echo ">>> command [--clean-remote] need param [ip]"
-    echo ">>> see usage with [--help | -h]"
+    fLog 1 ">>> command [--clean-remote] need param [ip]"
+    fLog 1 ">>> see usage with [--help | -h]"
     exit 0;
   fi
 }
@@ -109,7 +124,7 @@ cleanRemoteBackup() {
 # mongodump -h 127.0.0.1 -d yapi -o /root/mongodb/dump/
 # 备份分为硬备份(拷贝数据库源数据、日志)和dump导出备份(只导出yapi)
 backup() {
-  echo ">>> now backup mongodb data and logs ... "
+  fLog 0 ">>> now backup mongodb data and logs ... "
   mkdir -p $mongodbBackupPath
 
   local ip=""
@@ -137,13 +152,13 @@ backup() {
   done
 
   # 硬备份数据和日志文件到本地
-  echo ">>> packaging logs and data to $backupPath ... "
+  fLog 0 ">>> packaging logs and data to $backupPath ... "
   # rm $mongodbBackupPath/backup/* -f
   tar -czf $mongodbBackupPath/backup/$today/${lastDbPath}.gzip -C $mongodbPath/../ $lastDbPath
   tar -czf $mongodbBackupPath/backup/$today/${lastLogPath}.gzip -C $mongodbLogPath/../ $lastLogPath
 
   # dump导出yapi数据库到本地
-  echo ">>> dumping logs and data to $dumpPath ... "
+  fLog 0 ">>> dumping logs and data to $dumpPath ... "
 
   # rm $dumpPath/* -rf
 
@@ -165,7 +180,7 @@ backup() {
   fi
 
   echo
-  echo ">>> mongodb backup done ... "
+  fLog 0 ">>> mongodb backup done ... "
   echo
 }
 
@@ -197,14 +212,14 @@ restore() {
     exit 0
   fi
 
-  echo ">>> now restore mongodb data and logs ... "
+  fLog 0 ">>> now restore mongodb data and logs ... "
   # 检查路径
   if [ -z $mongodbBackupPath ]; then
-    echo ">>> checkout mongodb backup path fail!"
+    fLog 1 ">>> checkout mongodb backup path fail!"
     exit 1
   fi
   if [ -z $date ]; then
-    echo ">>> operation restore need param - [date], [2020-05-20] e.g"
+    fLog 1 ">>> operation restore need param - [date], [2020-05-20] e.g"
     exit
   fi
 
@@ -232,23 +247,23 @@ restore() {
     done
 
     # 停止mongodb
-    echo ">>> now trying to stop mongodb ... "
+    fLog 0 ">>> now trying to stop mongodb ... "
     stop
 
     if [ -f $dataFile ]; then
       rm $mongodbPath/data -rf
       tar -xf $dataFile -C $mongodbPath
-      echo ">>> mongodb data file restore done!"
+      fLog 0 ">>> mongodb data file restore done!"
     fi
 
     if [ -f $logFile ]; then
       rm $mongodbPath/logs -rf
       tar -xf $logFile -C $mongodbPath
-      echo ">>> mongodb log file restore done!"
+      fLog 0 ">>> mongodb log file restore done!"
     fi
 
     # 开启mongodb
-    echo ">>> now trying to start mongodb ... "
+    fLog 0 ">>> now trying to start mongodb ... "
     # start
     systemctl start mongodb
 
@@ -267,14 +282,14 @@ restore() {
   fi
 
   echo
-  echo ">>> mongodb restore done! "
+  fLog 0 ">>> mongodb restore done! "
   echo
 
 }
 
-# # 设置定时备份任务每天每五小时备份一次 -----------------
+# # 设置定时备份任务每天零点备份一次 -----------------
 setCronTab() {
-  local timeRule="* 0-23/5 * * * "
+  local timeRule="* 0 * * * "
 
   local ip=""
   local scheduleFile=$frontendScriptPath/conf/rsync-schedule
@@ -301,18 +316,18 @@ setCronTab() {
   echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin" >> $scheduleFile
   echo "" >> $scheduleFile
   echo "# minute   hour   day   month   week   command" >> $scheduleFile
-  echo "$timeRule bash $frontendScriptPath/mongodb backup --ip $ip" >> $scheduleFile
+  echo "$timeRule bash $frontendScriptPath/mongodb backup" >> $scheduleFile
 
   # 删除旧的crontab任务
   disableCronTab
   crontab -u root $scheduleFile
-  echo ">>> enable the mongodb-backup crontab service done!"
+  fLog 0 ">>> enable the mongodb-backup crontab service done!"
 }
 
 # # 清除定时备份任务 --------------
 disableCronTab() {
-  sed -i '/mongodb --backup/d' /var/spool/cron/root
-  echo ">>> disable the mongodb-backup crontab service done!"
+  sed -i '/mongodb backup/d' /var/spool/cron/root
+  fLog 0 ">>> disable the mongodb-backup crontab service done!"
 }
 
 # # 显示帮助信息 ----------------------
