@@ -81,6 +81,21 @@ restart() {
   start
 }
 
+# # 清理X天之前的目录/文件 --------------
+# @param [String] type => which type you want to delete - [d/f]
+# @param [Number] days => the days that you want to delete before it.
+cleanBeforeDays() {
+  if [[ -z $2 || $2 -lt 1 ]]; then
+    fLog 1 "params - days, it's a number and can not be empty!"
+  fi
+  if [[ ! $1 = "d" || $1 = "f" ]]; then
+    fLog 1 "params - type => the file type you want to delete, please input d(dir) or f(file)."
+  fi
+  find $mongodbBackupPath/dump -type $1 -mtime +$2 -exec rm -rf {} \;
+  find $mongodbBackupPath/backup -type $1 -mtime +$2 -exec rm -rf {} \;
+}
+
+
 # # 清理所有数据 --------------
 clean() {
   read -p 'are you sure to wipe mongodb data and restart (y/n) ? > ' -a choise
@@ -178,6 +193,9 @@ backup() {
   if [ $ip ]; then
     bash $frontendScriptPath/rsync --send "$ip"
   fi
+
+  fLog 0 ">>> remove backup files before 10 days ..."
+  cleanBeforeDays d 10
 
   echo
   fLog 0 ">>> mongodb backup done ... "
@@ -357,59 +375,61 @@ showUsage() {
 }
 
 # # Main Action
-case $1 in
 
-  --start | start )
-    checkVar
-    start
-  ;;
+Main() {
+  checkVar
+  case $1 in
 
-  --stop | stop )
-    checkVar
-    stop
-  ;;
+    --start | start )
+      start
+    ;;
 
-  --restart | restart )
-    checkVar
-    restart
-  ;;
+    --stop | stop )
+      stop
+    ;;
 
-  --clean | clean )
-    checkVar
-    clean
-  ;;
+    --restart | restart )
+      restart
+    ;;
 
-  --clean-remote | -cr )
-    checkVar
-    shift
-    cleanRemoteBackup $@
-  ;;
+    --cleanBeforeDays | -cbd )
+      cleanBeforeDays $2 $3
+      exit
+    ;;
 
-  backup )
-    checkVar
-    shift
-    backup $@
-  ;;
+    --clean | clean )
+      clean
+    ;;
 
-  restore )
-    checkVar
-    shift
-    restore $@
-  ;;
+    --clean-remote | -cr )
+      shift
+      cleanRemoteBackup $@
+    ;;
 
-  --help | -h )
-    showUsage
-  ;;
+    backup )
+      shift
+      backup $@
+    ;;
 
-  --crontab )
-    checkVar
-    shift
-    setCronTab $@
-  ;;
+    restore )
+      shift
+      restore $@
+    ;;
 
-  --drontab )
-    checkVar
-    disableCronTab
-  ;;
+    --help | -h )
+      showUsage
+    ;;
 
-esac
+    --crontab )
+      shift
+      setCronTab $@
+    ;;
+
+    --drontab )
+      disableCronTab
+    ;;
+    
+  esac
+}
+
+Main $@
