@@ -1,0 +1,172 @@
+#!/bin/bash
+
+target="x86_64"
+product="nodejs"
+ALIAS=""
+VERSION="8.0.0"
+RELEASE="1000"
+RELEASE_DIR=~/fe-release
+dirname="`pwd`"
+DATE="$(date +%F)"
+
+# --- help info 显示帮助信息
+function showUsage() {
+  echo
+  echo "description: build rpm package for frontend resource - nodejs."
+  echo " command: bash nodejs-builder [--param] "
+  echo " tips: * indicates that the parameter is required."
+  echo " |"
+  echo " |______ param:  [--help    | -h] => show usage info."
+  echo " |______ *param: [--version | -v  ] [version] => the used version of nodejs(the default is 8, all available [8 | 12])"
+  echo " |______ param:  [--release | -r  ] [release] => the release number(the default is 1000, not necessary)"
+  echo " |______ param:  [--target  | -t  ] [target ] => the compile target(the default is x86_64, not necessary)"
+  echo " |______ param:  [--alias   | -a  ] [name   ] => the alias name for this release(the default is empty, not necessary)"
+  echo " |"
+  echo " |______ example: bash nodejs-builder --help"
+  echo " |______ example: bash nodejs-builder -h"
+  echo " |______ example: bash nodejs-builder"
+  echo " |______ example: bash nodejs-builder --release 1000"
+  echo " |______ example: bash nodejs-builder --target aarch64"
+  echo " |______ example: bash nodejs-builder --alias ipsan"
+  echo " |______ example: bash nodejs-builder --version 8"
+  echo " |______ example: bash nodejs-builder --version 8 --release 1000 --target arm64 --alias ipsan"
+  echo
+}
+
+function parseParams() {
+  while [ -n "$1" ]; do
+    case "$1" in
+      --help | -h )
+      showUsage
+      exit 0
+      ;;
+      --version | -v )
+      if [ $2 -eq 8 ]; then
+        VERSION="8.0.0"
+      elif [ $2 -eq 12 ]; then
+        VERSION="12.0.0"
+      else
+        echo "the param - version must be one of the following values: [8 | 12]"
+        exit
+      fi
+      shift
+      ;;
+      --release | -r )
+      RELEASE="$2"
+      shift
+      ;;
+      --target | -t )
+      if [[ $2 = "x86_64" || $2 = "arm64" || $2 = "aarch64" ]]; then
+        target="$2"
+      else
+        echo "the param - target must be one of the following values: [x86_64 | arm64 | aarch64]"
+        exit
+      fi
+      shift
+      ;;
+      --alias | -a )
+      ALIAS="$2-"
+      shift
+      ;;
+    esac
+    shift
+  done
+
+  node_package="node-${VERSION}-linux-$target.tar.gz"
+  RELEASE_NAME="nodejs-${VERSION}"
+  BUNDLE_PATH="/root/${RELEASE_NAME}"
+}
+
+
+# --- warning / success
+function fLog(){
+  if [ "${1}" -ne 0 ]
+  then
+    echo
+    printf "\033[1;31m%b\033[0m" " ${2} \n"
+    echo
+  else
+    echo
+    printf "\033[1;32m%b\033[0m" "${2} \n"
+    echo
+  fi
+}
+
+# --- clean build dir
+function clean() {
+  rm ~/rpmbuild/BUILD/* -rf
+  rm ${BUNDLE_PATH} -rf
+}
+
+# --- be prepared for rpm build
+function configure() {
+  mkdir -p "${BUNDLE_PATH}"
+  mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+
+  # Makefile
+  cp ./conf/$product/v${VERSION}/Makefile ${BUNDLE_PATH} -f
+  
+  # node
+  fLog 0 ">>> copy file : [$node_package]"
+  tar -xf ./resources/$node_package -C ${BUNDLE_PATH}
+
+  # tar
+  fLog 0 ">>> build file : [${RELEASE_NAME}.tar.gz]"
+  tar -czf ~/rpmbuild/SOURCES/${RELEASE_NAME}.tar.gz -C /root ${RELEASE_NAME}
+}
+
+# --- build rpm
+function build() {
+  fLog 0 ">>> run rpmbuild ... "
+  # specified nodejs.spec
+  sed -i '/%define _version/d' conf/$product/v${VERSION}/nodejs.spec
+  sed -i "/%define name/a %define _version $VERSION" conf/$product/v${VERSION}/nodejs.spec
+
+  sed -i '/%define _release/d' conf/$product/v${VERSION}/nodejs.spec
+  sed -i "/%define name/a %define _release $RELEASE" conf/$product/v${VERSION}/nodejs.spec
+
+  if [ $VERSION == "8.0.0" ]; then
+    sed -i "/sudo ln -s \/opt\/allweb\/node-/d" conf/$product/v${VERSION}/nodejs.spec
+    sed -i "/####-anchor-\[node-version\]-\[post\]/a sudo ln -s \/opt\/allweb\/node-${VERSION}-linux\/bin\/* %{localbin} -f" conf/$product/v${VERSION}/nodejs.spec
+
+    sed -i "/sudo rm \/opt\/allweb\/node-/d" conf/$product/v${VERSION}/nodejs.spec
+    sed -i "/####-anchor-\[node-version\]-\[postun\]/a    rm \/opt\/allweb\/node-${VERSION}-linux -rf" conf/$product/v${VERSION}/nodejs.spec
+  fi
+
+  # specified Makefile
+  # sed -i "/cp -a \$(CURDIR)\/node-/d" conf/Makefile
+  # sed -i "/####-anchor-\[node-version\]-\[makefile\]/a"$'\t'"cp -a \$(CURDIR)/node-${VERSION}-linux \$(DESTDIR)\${prefix} -rf" conf/Makefile
+
+  # build nodejs.spec
+  rpmbuild -ba ./conf/$product/v${VERSION}/nodejs.spec --target $target
+}
+
+# --- release rpm
+function release() {
+  local _name=$1
+  local _dir=$2
+  local origin_dir=~/rpmbuild/RPMS/$target
+
+  mkdir -p ${_dir}
+  mv ${origin_dir}/${RELEASE_NAME}-${RELEASE}.el7.$target.rpm $_dir/${RELEASE_NAME}-${ALIAS}${RELEASE}.el7.$target.rpm
+
+  fLog 0 ">>> get the nodejs rpmpackage in $_dir/${RELEASE_NAME}-${ALIAS}${RELEASE}.el7.$target.rpm"
+}
+
+
+
+# --- MAIN ---
+function Main() {
+  # -
+  parseParams $@
+  # -
+  clean
+  # -
+  configure
+  # -
+  build
+  # -
+  release $RELEASE_NAME $RELEASE_DIR
+}
+
+Main $@

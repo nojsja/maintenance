@@ -1,4 +1,5 @@
 require('@babel/polyfill');
+const { ReadDirsString } = require('./gulpfile.utils');
 // import gulp
 const gulp = require('gulp'),
     runSequence = require('run-sequence'),
@@ -19,13 +20,24 @@ const cssSrc = `${cssDir}/*.css`,
     jsDist = "dist/js";
 
 // import module
-const fileMap = require('./conf/fileMap.js');
+// const fileMap = require('./conf/fileMap.js');
 
 // JS file + hash => rev-manifest.json
 gulp.task('revJs', function(){
   const jsSources = [];
+  const fileMap = new Map([
+    ['node-express-react', 'app.js'],
+  ]);
+  ReadDirsString(`${originDir}/node-express-react/website/app/controller`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/app/inspector`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/app/middleware`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/app/mock`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/app/model`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/system`, fileMap);
+  ReadDirsString(`${originDir}/node-express-react/website/utils`, fileMap);
+
   fileMap.forEach(function (value, key, map) {
-    jsSources.push(`${originDir}/${key}/${value}`);
+    jsSources.push(`${key}/${value}`);
   });
   return gulp.src(jsSources, {base: `${originDir}/node-express-react`})
     .pipe(babel({

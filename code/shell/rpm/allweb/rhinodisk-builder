@@ -1,0 +1,176 @@
+#!/bin/bash
+
+target="x86_64"
+path=""
+product="rhinodisk"
+ALIAS=""
+VERSION="1.0.0"
+RELEASE="1000"
+RELEASE_DIR=~/fe-release
+dirname="`pwd`"
+DATE="$(date +%F)"
+rhinodisk_package="RhinoDisk.tar.gz"
+
+# --- help info 显示帮助信息
+function showUsage() {
+  echo
+  echo "description: build rpm package for frontend resource - rhinodisk."
+  echo " command: bash rhinodisk-builder [--param] "
+  echo " tips: * indicates that the parameter is required."
+  echo " |"
+  echo " |______ param: [--help    | -h] => show usage info."
+  echo " |______ *param:[--path    | -p] => absolute path to resource file."
+  echo " |______ param: [--version | -v  ] [version] => the used version of pm(the default is 8, all available [8 | 12])"
+  echo " |______ param: [--release | -r  ] [release] => the release number(the default is 1000, not necessary)"
+  echo " |______ param: [--target  | -t  ] [target ] => the compile target(the default is x86_64, not necessary)"
+  echo " |______ param: [--alias   | -a  ] [name   ] => the alias name for this release(the default is empty, not necessary)"
+  echo " |"
+  echo " |______ example: bash rhinodisk-builder --help"
+  echo " |______ example: bash rhinodisk-builder -h"
+  echo " |______ example: bash rhinodisk-builder"
+  echo " |______ example: bash rhinodisk-builder --release 1000"
+  echo " |______ example: bash rhinodisk-builder --target aarch64"
+  echo " |______ example: bash rhinodisk-builder --alias ipsan"
+  echo " |______ example: bash rhinodisk-builder --version 1000"
+  echo " |______ example: bash rhinodisk-builder --version 1000 --release 1000 --target arm64 --alias ipsan"
+  echo
+}
+
+function parseParams() {
+  while [ -n "$1" ]; do
+    case "$1" in
+      --help | -h )
+        showUsage
+        exit 0
+      ;;
+      --path | -p )
+        path="$2"
+        shift
+      ;;
+      --version | -v )
+        VERSION="$2"
+        shift
+      ;;
+      --release | -r )
+        RELEASE="$2"
+        shift
+      ;;
+      --target | -t )
+        if [[ $2 = "x86_64" || $2 = "arm64" || $2 = "aarch64" ]]; then
+          target="$2"
+        else
+          echo "the param - target must be one of the following values: [x86_64 | arm64 | aarch64]"
+          exit
+        fi
+        shift
+      ;;
+      --alias | -a )
+        ALIAS="$2-"
+        shift
+      ;;
+    esac
+    shift
+  done
+  
+  RELEASE_NAME="rhinodisk-${VERSION}"
+  BUNDLE_PATH="/root/${RELEASE_NAME}"
+
+  if [ -z "$path" ]; then
+    fLog 1 "the param [path] is necessary, it's a path of resource file."
+    exit 1
+  fi
+}
+
+# --- warning / success
+function fLog(){
+  if [ "${1}" -ne 0 ]
+  then
+    echo
+    printf "\033[1;31m%b\033[0m" " ${2} \n"
+    echo
+  else
+    echo
+    printf "\033[1;32m%b\033[0m" "${2} \n"
+    echo
+  fi
+}
+
+# --- clean build dir
+function clean() {
+  rm ~/rpmbuild/BUILD/* -rf
+  rm ${BUNDLE_PATH} -rf
+}
+
+# --- be prepared for rpm build
+function configure() {
+  mkdir -p "${BUNDLE_PATH}"
+  mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+
+  # Makefile
+  cp ./conf/$product/Makefile ${BUNDLE_PATH} -f
+  
+  # rhinodisk
+  # fLog 0 ">>> copy file : [$rhinodisk_package]"
+  # tar -xf ./resources/$rhinodisk_package -C ${BUNDLE_PATH}
+  fLog 0 ">>> copy file : [$path]"
+  # tar -xf $path -C ${BUNDLE_PATH}
+  cp $path ${BUNDLE_PATH} -rf
+
+  # tar
+  fLog 0 ">>> build file : [${RELEASE_NAME}.tar.gz]"
+  tar -czf ~/rpmbuild/SOURCES/${RELEASE_NAME}.tar.gz -C /root ${RELEASE_NAME}
+}
+
+# --- build rpm
+function build() {
+  fLog 0 ">>> run rpmbuild ... "
+  # specified pm.spec
+  sed -i '/%define _version/d' conf/$product/rhinodisk.spec
+  sed -i "/%define name/a %define _version $VERSION" conf/$product/rhinodisk.spec
+
+  sed -i '/%define _release/d' conf/$product/rhinodisk.spec
+  sed -i "/%define name/a %define _release $RELEASE" conf/$product/rhinodisk.spec
+
+  # sed -i "/sudo ln -s \/opt\/allweb\/node-/d" conf/pm.spec
+  # sed -i "/####-anchor-\[node-version\]-\[post\]/a sudo ln -s \/opt\/allweb\/node-${VERSION}-linux\/bin\/* %{localbin} -f" conf/pm.spec
+
+  # sed -i "/sudo rm \/opt\/allweb\/node-/d" conf/pm.spec
+  # sed -i "/####-anchor-\[node-version\]-\[postun\]/a    rm \/opt\/allweb\/node-${VERSION}-linux -rf" conf/pm.spec
+
+  # specified Makefile
+  # sed -i "/cp -a \$(CURDIR)\/node-/d" conf/Makefile
+  # sed -i "/####-anchor-\[node-version\]-\[makefile\]/a"$'\t'"cp -a \$(CURDIR)/node-${VERSION}-linux \$(DESTDIR)\${prefix} -rf" conf/Makefile
+
+  # build pm.spec
+  rpmbuild -ba ./conf/$product/rhinodisk.spec --target $target
+}
+
+# --- release rpm
+function release() {
+  local _name=$1
+  local _dir=$2
+  local origin_dir=~/rpmbuild/RPMS/$target
+
+  mkdir -p ${_dir}
+  mv ${origin_dir}/${RELEASE_NAME}-${RELEASE}.el7.$target.rpm $_dir/${RELEASE_NAME}-${ALIAS}${RELEASE}.el7.$target.rpm
+
+  fLog 0 ">>> get the rhinodisk rpmpackage in $_dir/${RELEASE_NAME}-${ALIAS}${RELEASE}.el7.$target.rpm"
+}
+
+
+
+# --- MAIN ---
+function Main() {
+  # -
+  parseParams $@
+  # -
+  clean
+  # -
+  configure
+  # -
+  build
+  # -
+  release $RELEASE_NAME $RELEASE_DIR
+}
+
+Main $@
